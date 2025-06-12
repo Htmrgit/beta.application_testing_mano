@@ -106,6 +106,7 @@
             <!-- Product Grid -->
             <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-4">
                 <!-- Products will be loaded here by JavaScript -->
+                <p id="loadingProductsMessage" class="col-span-full text-center text-gray-600 text-lg">Loading products...</p>
             </div>
         </section>
 
@@ -304,109 +305,19 @@
     </div>
 
     <script>
-        // Google Apps Script Web App URL
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzM0aoBmkJvs10YfxFjqjZ43mO9u_z3JvjGMtVNJ3h2BrBBlrn8hQPaQC-49OE0jmI/exec';
+        // Google Apps Script Web App URL for POST requests (Order Placement)
+        // Ensure this URL is correct and corresponds to your deployed Apps Script
+        const WEB_APP_URL_POST = 'https://script.google.com/macros/s/AKfycbzM0aoBmkJvs10YfxFjqjZ43mO9u_z3JvjGMtVNJ3h2BrBBlrn8hQPaQC-49OE0jmI/exec';
+
+        // Google Apps Script Web App URL for GET requests (Product Fetching)
+        // This should generally be the SAME URL as WEB_APP_URL_POST for a single Apps Script project
+        const WEB_APP_URL_GET = 'https://script.google.com/macros/s/AKfycbzM0aoBmkJvs10YfxFjqjZ43mO9u_z3JvjGMtVNJ3h2BrBBlrn8hQPaQC-49OE0jmI/exec';
+
 
         // Set your store logo URL here
         const STORE_LOGO_URL = 'https://placehold.co/40x40/ffffff/000000?text=LOGO'; // Example: 'https://yourdomain.com/your-logo.png'
 
-        // Sample Product Data (More products can be added here)
-        // Note: Image URLs are placeholders and should ideally be hosted or base64 encoded for production
-        const products = [
-            {
-                id: 'frame-1',
-                name: 'Personalized Photo Frame',
-                description: 'Cherish your favorite moments in a high-quality photo frame. Available in various sizes, types, and colors.',
-                category: 'Frame',
-                images: [
-                    'https://placehold.co/600x400/a0c4ff/000000?text=Frame+Image+1',
-                    'https://placehold.co/600x400/bdb2ff/000000?text=Frame+Image+2',
-                    'https://placehold.co/600x400/ffc6ff/000000?text=Frame+Image+3'
-                ],
-                options: {
-                    sizes: [
-                        { size: 'Small (6x8 inches)', price: 499 },
-                        { size: 'Medium (8x10 inches)', price: 799 },
-                        { size: 'Large (10x12 inches)', price: 999 }
-                    ],
-                    frameTypes: ['Glass', 'Acrylic'],
-                    frameColors: ['Black', 'White', 'Brown']
-                },
-                selectedSize: 'Small (6x8 inches)', // Default selected
-                selectedFrameType: 'Glass', // Default selected
-                selectedFrameColor: 'Black' // Default selected
-            },
-            {
-                id: 'keychain-1',
-                name: 'Custom Photo Keychain',
-                description: 'Create a unique keychain with your favorite photo. Durable and attractive.',
-                category: 'Keychain',
-                images: [
-                    'https://placehold.co/600x400/ffadad/000000?text=Keychain+Image+1',
-                    'https://placehold.co/600x400/ffd6a5/000000?text=Keychain+Image+2'
-                ],
-                options: {
-                    sizes: [{ size: 'Standard (2x2 inches)', price: 149 }],
-                    frameTypes: [], // Not applicable for keychains
-                    frameColors: [] // Not applicable for keychains
-                },
-                selectedSize: 'Standard (2x2 inches)'
-            },
-            {
-                id: 'mug-1',
-                name: 'Magic Mug',
-                description: 'A mug with a special coating that reveals your picture when a hot beverage is poured.',
-                category: 'Mug',
-                images: [
-                    'https://placehold.co/600x400/fdffb6/000000?text=Mug+Image+1',
-                    'https://placehold.co/600x400/caffbf/000000?text=Mug+Image+2'
-                ],
-                options: {
-                    sizes: [{ size: 'Standard (11oz)', price: 349 }],
-                    frameTypes: [],
-                    frameColors: []
-                },
-                selectedSize: 'Standard (11oz)'
-            },
-            {
-                id: 'card-1',
-                name: 'Personalized Greeting Card',
-                description: 'A greeting card with a custom message and picture for any occasion.',
-                category: 'Card',
-                images: [
-                    'https://placehold.co/600x400/9bf6ff/000000?text=Card+Image+1',
-                    'https://placehold.co/600x400/a0c4ff/000000?text=Card+Image+2'
-                ],
-                options: {
-                    sizes: [{ size: 'A5', price: 99 }],
-                    frameTypes: [],
-                    frameColors: []
-                },
-                selectedSize: 'A5'
-            },
-            {
-                id: 'frame-2',
-                name: 'Crystal Photo Frame',
-                description: 'A beautiful and elegant crystal photo frame for your home.',
-                category: 'Frame',
-                images: [
-                    'https://placehold.co/600x400/ffadad/000000?text=Crystal+Frame+1',
-                    'https://placehold.co/600x400/ffd6a5/000000?text=Crystal+Frame+2'
-                ],
-                options: {
-                    sizes: [
-                        { size: 'Small (5x7 inches)', price: 599 },
-                        { size: 'Medium (7x9 inches)', price: 899 }
-                    ],
-                    frameTypes: ['Glass'],
-                    frameColors: ['Transparent']
-                },
-                selectedSize: 'Small (5x7 inches)',
-                selectedFrameType: 'Glass',
-                selectedFrameColor: 'Transparent'
-            }
-        ];
-
+        let products = []; // This will now store products fetched from Google Sheet
         let cart = JSON.parse(localStorage.getItem('cart')) || []; // Load cart from localStorage
         let currentSelectedProduct = null; // Stores the product currently viewed in modal
         let uploadedFileData = null;
@@ -487,7 +398,50 @@
             document.getElementById('cartItemCount').textContent = count;
         }
 
-        // --- Product Rendering ---
+        // --- Product Fetching and Rendering ---
+        /**
+         * Fetches product data from the Google Sheet via Apps Script.
+         */
+        async function fetchProductsFromSheet() {
+            const productGrid = document.getElementById('productGrid');
+            const loadingMessage = document.getElementById('loadingProductsMessage');
+            loadingMessage.classList.remove('hidden'); // Show loading message
+            productGrid.innerHTML = ''; // Clear existing products
+
+            try {
+                // Use GET with an action parameter to trigger doGet in Apps Script
+                const response = await fetch(`${WEB_APP_URL_GET}?action=getProducts`);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('HTTP Error fetching products:', response.status, errorText);
+                    showNotification('Error', 'Failed to fetch products from server. Please try again later.', 'error');
+                    loadingMessage.textContent = 'Failed to load products.';
+                    return;
+                }
+
+                const result = await response.json();
+
+                if (result.status === 'SUCCESS' && result.products) {
+                    products = result.products; // Assign fetched products to the global products array
+                    renderProducts(); // Render all fetched products initially
+                    loadingMessage.classList.add('hidden'); // Hide loading message
+                    if (products.length === 0) {
+                        loadingMessage.textContent = 'No products available.';
+                        loadingMessage.classList.remove('hidden');
+                    }
+                } else {
+                    console.error('Error in Apps Script response for products:', result.message);
+                    showNotification('Error', result.message || 'Failed to fetch products due to server error.', 'error');
+                    loadingMessage.textContent = 'Failed to load products.';
+                }
+            } catch (error) {
+                console.error('Network or parsing error fetching products:', error);
+                showNotification('Connection Error', 'Could not connect to the server to fetch products. Please check your internet connection.', 'error');
+                loadingMessage.textContent = 'Failed to load products. Check connection.';
+            }
+        }
+
         /**
          * Renders products on the home page, optionally filtered by category.
          * @param {string} filterCategory - The category to filter products by, 'All' for no filter.
@@ -500,15 +454,30 @@
                 ? products
                 : products.filter(p => p.category === filterCategory);
 
+            if (filteredProducts.length === 0) {
+                productGrid.innerHTML = '<p class="col-span-full text-center text-gray-600 text-lg">No products found in this category.</p>';
+                return;
+            }
+
             filteredProducts.forEach(product => {
+                // Ensure product has at least one image, use a placeholder if not
+                const imageUrl = product.images && product.images.length > 0
+                                 ? product.images[0]
+                                 : `https://placehold.co/600x400/cccccc/333333?text=No+Image`;
+
+                // Calculate initial price based on the first size option
+                const initialPrice = product.options.sizes.length > 0
+                                   ? product.options.sizes[0].price
+                                   : 0; // Default price if no size options
+
                 const productCard = document.createElement('div');
                 productCard.className = 'bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden';
                 productCard.innerHTML = `
-                    <img src="${product.images[0]}" alt="${product.name}" class="w-full h-48 object-cover rounded-t-lg">
+                    <img src="${imageUrl}" alt="${product.name}" class="w-full h-48 object-cover rounded-t-lg">
                     <div class="p-5">
                         <h3 class="font-bold text-xl text-gray-800 mb-2">${product.name}</h3>
                         <p class="text-gray-600 text-sm mb-4 line-clamp-3">${product.description}</p>
-                        <p class="font-semibold text-lg text-blue-600 mb-4">₹${product.options.sizes[0].price.toFixed(2)}</p>
+                        <p class="font-semibold text-lg text-blue-600 mb-4">₹${initialPrice.toFixed(2)}</p>
                         <div class="flex flex-col sm:flex-row gap-3">
                             <button class="view-details-btn bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out w-full sm:w-1/2" data-product-id="${product.id}">
                                 View Details
@@ -542,16 +511,19 @@
                     const product = products.find(p => p.id === productId);
                     if (product) {
                         // Use default selected options for direct add to cart
+                        // Ensure a default size/price exists for adding to cart directly
+                        const defaultSizeOption = product.options.sizes.length > 0 ? product.options.sizes[0] : { size: 'Default', price: 0 };
+
                         addToCart({
                             id: product.id,
                             name: product.name,
-                            price: product.options.sizes.find(s => s.size === product.selectedSize).price,
+                            price: defaultSizeOption.price,
                             quantity: 1,
                             image: product.images[0],
-                            size: product.selectedSize,
-                            category: product.category, // Added category for Apps Script logic
-                            frameType: product.category === 'Frame' ? product.selectedFrameType : undefined,
-                            frameColor: product.category === 'Frame' ? product.selectedFrameColor : undefined
+                            size: defaultSizeOption.size,
+                            category: product.category,
+                            frameType: product.category === 'Frame' ? (product.selectedFrameType || product.options.frameTypes[0]) : undefined,
+                            frameColor: product.category === 'Frame' ? (product.selectedFrameColor || product.options.frameColors[0]) : undefined
                         });
                         showNotification('Success!', `${product.name} added to cart.`, 'success');
                     }
@@ -572,7 +544,7 @@
 
             // Product Image Gallery
             const mainImage = document.getElementById('modalProductImage');
-            mainImage.src = currentSelectedProduct.images[0];
+            mainImage.src = currentSelectedProduct.images[0] || `https://placehold.co/400x300/e0e0e0/000000?text=Product+Image`;
             const galleryDiv = document.getElementById('modalImageGallery');
             galleryDiv.innerHTML = '';
             currentSelectedProduct.images.forEach(imgSrc => {
@@ -582,17 +554,34 @@
                 imgThumb.onclick = () => mainImage.src = imgSrc;
                 galleryDiv.appendChild(imgThumb);
             });
+            if (currentSelectedProduct.images.length === 0) { // Add placeholder if no images
+                const imgThumb = document.createElement('img');
+                imgThumb.src = `https://placehold.co/20x20/cccccc/333333?text=N/A`;
+                imgThumb.className = 'w-20 h-20 object-cover rounded-md cursor-not-allowed opacity-50';
+                galleryDiv.appendChild(imgThumb);
+            }
 
             // Populate Size options
             const sizeSelect = document.getElementById('modalProductSize');
             sizeSelect.innerHTML = '';
-            currentSelectedProduct.options.sizes.forEach(sizeOption => {
+            if (currentSelectedProduct.options.sizes.length > 0) {
+                currentSelectedProduct.options.sizes.forEach(sizeOption => {
+                    const option = document.createElement('option');
+                    option.value = sizeOption.size;
+                    option.textContent = `${sizeOption.size} - ₹${sizeOption.price.toFixed(2)}`;
+                    sizeSelect.appendChild(option);
+                });
+                // Set default selection based on fetched value, or the first available
+                sizeSelect.value = currentSelectedProduct.selectedSize || currentSelectedProduct.options.sizes[0].size;
+            } else {
+                // Add a default "No sizes" option if no sizes are defined
                 const option = document.createElement('option');
-                option.value = sizeOption.size;
-                option.textContent = `${sizeOption.size} - ₹${sizeOption.price.toFixed(2)}`;
+                option.value = 'N/A';
+                option.textContent = 'No sizes available';
                 sizeSelect.appendChild(option);
-            });
-            sizeSelect.value = currentSelectedProduct.selectedSize; // Set default selection
+                sizeSelect.disabled = true;
+            }
+
 
             // Populate Frame Type options (if applicable)
             const frameTypeDiv = document.getElementById('frameTypeOption');
@@ -606,9 +595,13 @@
                     option.textContent = type;
                     frameTypeSelect.appendChild(option);
                 });
-                frameTypeSelect.value = currentSelectedProduct.selectedFrameType;
+                // Set default selection based on fetched value, or the first available
+                frameTypeSelect.value = currentSelectedProduct.selectedFrameType || currentSelectedProduct.options.frameTypes[0];
+                frameTypeSelect.disabled = false;
             } else {
                 frameTypeDiv.classList.add('hidden');
+                frameTypeSelect.innerHTML = '<option value="">N/A</option>';
+                frameTypeSelect.disabled = true;
             }
 
             // Populate Frame Color options (if applicable)
@@ -623,9 +616,13 @@
                     option.textContent = color;
                     frameColorSelect.appendChild(option);
                 });
-                frameColorSelect.value = currentSelectedProduct.selectedFrameColor;
+                // Set default selection based on fetched value, or the first available
+                frameColorSelect.value = currentSelectedProduct.selectedFrameColor || currentSelectedProduct.options.frameColors[0];
+                frameColorSelect.disabled = false;
             } else {
                 frameColorDiv.classList.add('hidden');
+                frameColorSelect.innerHTML = '<option value="">N/A</option>';
+                frameColorSelect.disabled = true;
             }
 
             // Update price based on current selections
@@ -636,12 +633,17 @@
                 currentSelectedProduct.selectedSize = event.target.value;
                 updateModalProductPrice();
             };
-            frameTypeSelect.onchange = (event) => {
-                currentSelectedProduct.selectedFrameType = event.target.value;
-            };
-            frameColorSelect.onchange = (event) => {
-                currentSelectedProduct.selectedFrameColor = event.target.value;
-            };
+            // Only add listeners if options are present and enabled
+            if (!frameTypeSelect.disabled) {
+                frameTypeSelect.onchange = (event) => {
+                    currentSelectedProduct.selectedFrameType = event.target.value;
+                };
+            }
+            if (!frameColorSelect.disabled) {
+                frameColorSelect.onchange = (event) => {
+                    currentSelectedProduct.selectedFrameColor = event.target.value;
+                };
+            }
 
             openModal('productDetailModal');
         }
@@ -650,10 +652,18 @@
          * Updates the price displayed in the product detail modal based on selected size.
          */
         function updateModalProductPrice() {
+            // Find the selected size option from the current product's options
+            const selectedSizeValue = document.getElementById('modalProductSize').value;
             const selectedSizeOption = currentSelectedProduct.options.sizes.find(
-                s => s.size === document.getElementById('modalProductSize').value
+                s => s.size === selectedSizeValue
             );
-            document.getElementById('modalProductPrice').textContent = `₹${selectedSizeOption.price.toFixed(2)}`;
+
+            // If a valid size option is found, display its price. Otherwise, display 0.00.
+            if (selectedSizeOption) {
+                document.getElementById('modalProductPrice').textContent = `₹${selectedSizeOption.price.toFixed(2)}`;
+            } else {
+                document.getElementById('modalProductPrice').textContent = `₹0.00`;
+            }
         }
 
         // --- Cart Management ---
@@ -791,7 +801,8 @@
             // Set the logo URL when the DOM content is loaded
             document.getElementById('storeLogo').src = STORE_LOGO_URL;
 
-            renderProducts(); // Initial load of products
+            // Initialize products from Google Sheet
+            fetchProductsFromSheet();
             updateCartItemCount(); // Update cart count on load
 
             // Category filter buttons
@@ -813,12 +824,15 @@
 
                 const selectedSizeOption = currentSelectedProduct.options.sizes.find(
                     s => s.size === document.getElementById('modalProductSize').value
-                ).price;
+                );
+                // Ensure selectedSizeOption is valid before accessing its price
+                const selectedPrice = selectedSizeOption ? selectedSizeOption.price : 0;
+
 
                 const itemToAdd = {
                     id: currentSelectedProduct.id,
                     name: currentSelectedProduct.name,
-                    price: selectedSizeOption,
+                    price: selectedPrice,
                     quantity: 1,
                     image: currentSelectedProduct.images[0],
                     size: document.getElementById('modalProductSize').value,
@@ -938,64 +952,48 @@
                     fileType: uploadedFileType
                 };
 
+                // Add AbortController for fetch timeout
+                const controller = new AbortController();
+                const signal = controller.signal;
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
                 try {
-                    const response = await fetch(WEB_APP_URL, {
+                    const response = await fetch(WEB_APP_URL_POST, { // Use WEB_APP_URL_POST
                         method: 'POST',
                         headers: {
                             'Content-Type': 'text/plain;charset=utf-8', // Important for Apps Script doPost
                         },
                         body: JSON.stringify(orderData),
+                        signal: signal // Attach the abort signal
                     });
 
-                    // Log the raw response object for debugging
-                    console.log('Raw response from Apps Script:', response);
-
-                    // Get the response body as text first, as .json() can fail
-                    const responseText = await response.text();
-                    console.log('Raw response text (from Apps Script):', responseText);
+                    clearTimeout(timeoutId); // Clear timeout if fetch completes
 
                     showLoading(false); // Hide loading spinner here, regardless of success or failure.
 
-                    // Check if the HTTP response itself was successful (e.g., 200 OK)
-                    if (!response.ok) {
-                        console.error('HTTP Error Response (non-OK status):', responseText);
-                        showNotification('Server Error!', `Order failed with status ${response.status}. Please try again.`, 'error');
-                        return; // Exit if HTTP response was not OK
-                    }
+                    // Always try to read response text first
+                    const responseText = await response.text();
+                    console.log('Raw response text from Apps Script (POST):', responseText);
 
-                    let result = null;
-                    try {
-                        result = JSON.parse(responseText); // Attempt to parse JSON
-                    } catch (jsonParseError) {
-                        console.warn('Could not parse JSON response:', jsonParseError);
-                        // If JSON parsing fails, we'll rely on the text-based heuristic below.
-                    }
+                    // Check if the HTTP response itself was successful (status code 2xx)
+                    if (response.ok) {
+                        let result = null;
+                        try {
+                            result = JSON.parse(responseText); // Attempt to parse JSON
+                        } catch (jsonParseError) {
+                            console.warn('Could not parse JSON response for POST, assuming success due to response.ok:', jsonParseError);
+                            // If JSON parsing fails but response.ok is true, we proceed as success.
+                        }
 
-                    // Prioritize JSON result if available and valid
-                    if (result && result.status === 'SUCCESS') {
-                        showNotification('Order Successful!', result.message, 'success');
-                        // Clear cart and form fields as if successful
-                        cart = [];
-                        saveCart();
-                        renderCart();
-                        updateCartItemCount();
-                        document.getElementById('customerName').value = '';
-                        document.getElementById('customerPhone').value = '';
-                        document.getElementById('deliveryOption').checked = true;
-                        document.getElementById('deliveryAddress').value = '';
-                        document.getElementById('deliveryAddress').readOnly = false;
-                        document.getElementById('fileUpload').value = '';
-                        document.getElementById('fileNameDisplay').textContent = '';
-                        uploadedFileData = null;
-                        uploadedFileName = '';
-                        uploadedFileType = '';
-                    } else if (result && result.status === 'ERROR') {
-                        showNotification('Order Failed!', `An error occurred while placing the order: ${result.message}`, 'error');
-                    } else {
-                        // Fallback heuristic: If JSON parsing failed or status not explicitly found,
-                        // and the text contains 'SUCCESS', assume success.
-                        if (responseText.toUpperCase().includes('SUCCESS')) { // Case-insensitive check
-                            showNotification('Order Successful!', 'Order placed successfully. There was a minor issue with server response format. Please check your order details.', 'success');
+                        // If JSON was parsed and explicitly indicates error, show that.
+                        // Otherwise, if response.ok is true, assume success.
+                        if (result && result.status === 'ERROR') {
+                            showNotification('Order Failed!', `An error occurred while placing the order: ${result.message}`, 'error');
+                        } else {
+                            // This is the key change: If response.ok is true,
+                            // AND it didn't explicitly return an ERROR JSON,
+                            // we'll show success.
+                            showNotification('Order Successful!', 'Your order has been placed successfully. Thank you!', 'success');
                             // Clear cart and form fields as if successful
                             cart = [];
                             saveCart();
@@ -1011,17 +1009,23 @@
                             uploadedFileData = null;
                             uploadedFileName = '';
                             uploadedFileType = '';
-                        } else {
-                            // If none of the above, then it's genuinely an unknown response error.
-                            showNotification('Response Error!', 'Received an unreadable or unexpected response from the server. Please try again.', 'error');
                         }
+                    } else {
+                        // This block handles non-2xx HTTP status codes
+                        console.error('HTTP Error Response (non-OK status for POST):', responseText);
+                        showNotification('Server Error!', `Order failed with status ${response.status}. Please try again.`, 'error');
                     }
 
-                } catch (networkError) {
-                    // This outer catch block catches fundamental network errors (e.g., no internet, CORS issues preventing fetch itself)
-                    showLoading(false); // Ensure loading is hidden on network error
-                    console.error('Network Error during order placement:', networkError);
-                    showNotification('Connection Error!', 'A network error occurred while placing the order. Please try again.', 'error');
+                } catch (error) {
+                    // This catch block handles network errors and `AbortError` (timeout)
+                    showLoading(false); // Ensure loading is hidden on any error
+                    if (error.name === 'AbortError') {
+                        console.error('Request timed out:', error);
+                        showNotification('Request Timeout!', 'The request took too long to respond. Please try again.', 'error');
+                    } else {
+                        console.error('Network Error during order placement (POST):', error);
+                        showNotification('Connection Error!', 'A network error occurred while placing the order. Please try again.', 'error');
+                    }
                 }
             });
 
