@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Print Max Gift</title>
+    <title>Print on Demand</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts - Inter -->
@@ -60,6 +60,75 @@
                 transform: translateY(0);
             }
         }
+        /* Loader styles */
+        .loader {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 2s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Styles for the bottom navigation bar */
+        #bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #1e3a8a; /* Darker blue, Tailwind blue-800 */
+            color: white;
+            padding: 0.5rem 0; /* Reduced padding */
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2); /* Shadow on top */
+            z-index: 1000;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        #bottom-nav button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 0.25rem; /* Adjust padding for smaller buttons */
+            color: white;
+            font-weight: 600;
+            font-size: 0.75rem; /* Smaller font for mobile */
+            transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out;
+            border-radius: 0.5rem; /* Rounded corners for buttons */
+            min-width: 60px; /* Ensure buttons have minimum width */
+            text-align: center;
+        }
+
+        #bottom-nav button:hover {
+            background-color: #2563eb; /* Tailwind blue-700 on hover */
+        }
+
+        /* Active button style */
+        #bottom-nav button.active-nav-btn {
+            color: #bfdbfe; /* Tailwind blue-200 */
+            background-color: #172554; /* Even darker blue for active state */
+        }
+
+        #bottom-nav svg {
+            width: 1.5rem; /* Icon size */
+            height: 1.5rem;
+            margin-bottom: 0.2rem; /* Space between icon and text */
+        }
+
+        /* Adjust main content padding to prevent being hidden by fixed footer */
+        main {
+            padding-bottom: 5rem; /* Enough space for the fixed bottom nav */
+        }
     </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 flex flex-col">
@@ -67,37 +136,16 @@
     <!-- Order Message Notification -->
     <div id="order-message" class="fixed top-4 left-1/2 -translate-x-1/2 px-6 py-3 rounded-lg text-white font-semibold shadow-lg z-50 transition-opacity duration-300 opacity-0 hidden" role="alert"></div>
 
-    <!-- Navigation Bar -->
-    <nav class="bg-blue-700 p-4 shadow-lg">
-        <div class="container mx-auto flex flex-col sm:flex-row justify-between items-center">
-            <!-- Logo and App Title -->
-            <a href="#" class="flex items-center text-white text-3xl font-extrabold tracking-wide mb-3 sm:mb-0" onclick="showPage('home')">
-                <img src="https://placehold.co/48x48/ffffff/000000?text=Logo" alt="App Logo" class="h-10 w-10 rounded-full mr-3" />
-                Print Max Gift
-            </a>
-            <!-- Navigation Buttons -->
-            <div class="flex flex-wrap justify-center space-x-4 sm:space-x-6">
-                <button id="nav-home" class="text-white text-base sm:text-lg font-semibold hover:text-blue-200 transition-colors duration-200" onclick="showPage('home')">
-                    Home
-                </button>
-                <button id="nav-about" class="text-white text-base sm:text-lg font-semibold hover:text-blue-200 transition-colors duration-200" onclick="showPage('about')">
-                    About Us
-                </button>
-                <button id="nav-contact" class="text-white text-base sm:text-lg font-semibold hover:text-blue-200 transition-colors duration-200" onclick="showPage('contact')">
-                    Contact Us
-                </button>
-                <button id="nav-cart" class="relative text-white text-base sm:text-lg font-semibold hover:text-blue-200 transition-colors duration-200" onclick="showPage('cart')">
-                    Cart
-                    <span id="cart-item-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">
-                        0
-                    </span>
-                </button>
-            </div>
-        </div>
-    </nav>
+    <!-- Top Header Bar (App Title Only) -->
+    <header class="bg-blue-700 p-4 shadow-lg text-white text-3xl font-extrabold tracking-wide text-center">
+        <a href="#" class="flex items-center justify-center" onclick="showPage('home')">
+            <img src="https://placehold.co/48x48/ffffff/000000?text=Logo" alt="App Logo" class="h-10 w-10 rounded-full mr-3" />
+            Print on Demand
+        </a>
+    </header>
 
     <!-- Main Content Area -->
-    <main class="flex-grow container mx-auto p-2 sm:p-4">
+    <main class="flex-grow container mx-auto p-2 sm:p-4 pb-20"> <!-- Added pb-20 to accommodate bottom nav -->
 
         <!-- Home Page Section -->
         <section id="home-page" class="page-section active p-4 sm:p-8">
@@ -131,7 +179,7 @@
                     <li><span class="font-bold">Specialization:</span> Custom Printed Frames, Keychains, Mugs, and Cards</li>
                     <li><span class="font-bold">Quality:</span> We are committed to using the best quality materials and printing techniques in all our products.</li>
                     <li><span class="font-bold">Customer Service:</span> Your satisfaction is our top priority. Do not hesitate to contact us with any questions or concerns.</li>
-                </ul>
+                    </ul>
                 <p class="mt-6 text-center text-gray-600">
                     We look forward to creating something amazing for you!
                 </p>
@@ -166,32 +214,31 @@
 
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white p-6 text-center mt-auto shadow-inner">
-        <div class="container mx-auto">
-            <p class="text-sm mb-2">
-                &copy; <span id="current-year"></span> Print on Demand. All rights reserved.
-            </p>
-            <div class="flex justify-center space-x-4 text-lg">
-                <a href="#" class="hover:text-blue-400 transition-colors duration-200" aria-label="Facebook">
-                    <!-- Simple Facebook icon SVG -->
-                    <svg fill="currentColor" viewBox="0 0 24 24" class="w-6 h-6"><path d="M14 13.5h2.5l1-4H14V6.75c0-.621.503-1.125 1.125-1.125h.875V2.375c-.246-.03-.849-.074-1.676-.074-1.657 0-2.775 1.054-2.775 2.885v1.98h-2.5v4H11v6.5h3v-6.5z"/></svg>
-                </a>
-                <a href="#" class="hover:text-blue-400 transition-colors duration-200" aria-label="Twitter">
-                    <!-- Simple Twitter icon SVG -->
-                    <svg fill="currentColor" viewBox="0 0 24 24" class="w-6 h-6"><path d="M22.46 6c-.84.37-1.75.62-2.68.73.96-.58 1.7-1.5 2.05-2.6-.9.53-1.89.92-2.93 1.13-2.03-2.18-5.71-1.07-6.84 2.14-4.82-.24-9.1-2.57-12.02-6.1c-.5.85-.79 1.83-.79 2.9 0 2.02 1.03 3.8 2.58 4.85-.75-.02-1.46-.23-2.08-.57v.03c0 2.21 1.57 4.05 3.65 4.47-.38.1-.79.15-1.21.15-.3 0-.58-.03-.86-.09.58 1.82 2.26 3.14 4.25 3.18-1.55 1.2-3.52 1.91-5.64 1.91-.37 0-.74-.02-1.1-.06C2.26 21.17 4.54 22 7.02 22c8.42 0 13.04-6.97 13.04-13.04 0-.2 0-.39-.01-.59.9-.65 1.68-1.47 2.3-2.4z"/></svg>
-                </a>
-                <a href="#" class="hover:text-blue-400 transition-colors duration-200" aria-label="Instagram">
-                    <!-- Simple Instagram icon SVG -->
-                    <svg fill="currentColor" viewBox="0 0 24 24" class="w-6 h-6"><path d="M7.8 2c-2.6 0-4.8 2.2-4.8 4.8v10.4c0 2.6 2.2 4.8 4.8 4.8h8.4c2.6 0 4.8-2.2 4.8-4.8V6.8c0-2.6-2.2-4.8-4.8-4.8H7.8zm8.4 1.5h-.8c-.8 0-1.5.7-1.5 1.5v.8c0 .8.7 1.5 1.5 1.5h.8c.8 0 1.5-.7 1.5-1.5v-.8c0-.8-.7-1.5-1.5-1.5zM12 7c-2.7 0-5 2.3-5 5s2.3 5 5 5 5-2.3 5-5-2.3-5-5-5zm0 8.5c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5 3.5 1.6 3.5 3.5-1.6 3.5-3.5 3.5z"/></svg>
-                </a>
-            </div>
-        </div>
+    <!-- Bottom Navigation Bar (New) -->
+    <footer id="bottom-nav">
+        <button id="nav-home-bottom" class="active-nav-btn" onclick="showPage('home')">
+            <svg fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            <span>Home</span>
+        </button>
+        <button id="nav-about-bottom" onclick="showPage('about')">
+            <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm0-4.5c-.83 0-1.5-.67-1.5-1.5V7c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v3c0 .83-.67 1.5-1.5 1.5z"/></svg>
+            <span>About</span>
+        </button>
+        <button id="nav-contact-bottom" onclick="showPage('contact')">
+            <svg fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+            <span>Contact</span>
+        </button>
+        <button id="nav-cart-bottom" class="relative" onclick="showPage('cart')">
+            <svg fill="currentColor" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2S15.9 22 17 22s2-.9 2-2-.9-2-2-2zm-3.69-9.59L17 11.4l1.65-3.34c.2-.41-.05-.9-.48-.9H6.25l-.94-2H1v2h2l3.6-7.56c.2-.42.6-.64 1.05-.64h12.5c.67 0 1.05.74.68 1.3L19 12h-6.2l-2.42-5.18z"/></svg>
+            <span>Cart</span>
+            <span id="cart-item-count" class="absolute top-0 right-1 bg-red-500 text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center hidden">
+                0
+            </span>
+        </button>
     </footer>
 
     <script>
         // --- Product Data ---
-        // Product data uses English for internal consistency and UI also in English
         const productsData = [
             {
                 id: 'P001',
@@ -294,7 +341,8 @@
         const cartContentDiv = document.getElementById('cart-content');
         const orderMessageDiv = document.getElementById('order-message');
         const cartItemCountSpan = document.getElementById('cart-item-count');
-        const navButtons = document.querySelectorAll('nav button');
+        // Select all bottom navigation buttons
+        const bottomNavButtons = document.querySelectorAll('#bottom-nav button');
 
         // --- Helper Functions ---
 
@@ -324,9 +372,19 @@
             if (cartItems.length > 0) {
                 cartItemCountSpan.textContent = cartItems.length;
                 cartItemCountSpan.classList.remove('hidden');
+                // Adjust position for smaller icon if needed, e.g. top-0, right-0
+                cartItemCountSpan.classList.add('top-0', 'right-1', 'h-4', 'w-4', 'text-xs');
             } else {
                 cartItemCountSpan.classList.add('hidden');
             }
+        }
+
+        /**
+         * Calculates the total price of items in the cart.
+         * @returns {number} The total price.
+         */
+        function calculateCartTotal() {
+            return cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
         }
 
         /**
@@ -341,11 +399,12 @@
             document.getElementById(`${pageId}-page`).classList.add('active');
             currentActivePage = pageId;
 
-            // Update active state for nav buttons
-            navButtons.forEach(button => {
-                button.classList.remove('border-b-2', 'border-white');
-                if (button.id === `nav-${pageId}`) {
-                    button.classList.add('border-b-2', 'border-white');
+            // Update active state for bottom nav buttons
+            bottomNavButtons.forEach(button => {
+                button.classList.remove('active-nav-btn');
+                // The button IDs were changed to match the bottom nav, e.g., nav-home-bottom
+                if (button.id === `nav-${pageId}-bottom`) {
+                    button.classList.add('active-nav-btn');
                 }
             });
 
@@ -361,7 +420,7 @@
         function renderProducts() {
             productListDiv.innerHTML = ''; // Clear existing products
 
-            const productsToDisplay = selectedCategory === 'All' // Filter using English category name
+            const productsToDisplay = selectedCategory === 'All'
                 ? productsData
                 : productsData.filter(p => p.category === selectedCategory);
 
@@ -374,7 +433,7 @@
                 // Store selected options for this card instance
                 productCard.dataset.selectedSize = product.sizes[0].size;
                 productCard.dataset.selectedPrice = product.sizes[0].price;
-                if (product.category === 'Frame') { // Check category in English for UI
+                if (product.category === 'Frame') {
                     productCard.dataset.selectedFrameType = product.frameTypes[0];
                     productCard.dataset.selectedFrameColor = product.frameColors[0];
                 }
@@ -440,30 +499,22 @@
                     ${frameTypeOptionsHtml}
                     ${frameColorOptionsHtml}
 
-                    <div class="mb-3">
-                        <label for="file-upload-${product.id}" class="block text-gray-700 text-sm font-bold mb-1">Upload File for Print (JPG, PNG, PDF):</label>
-                        <input type="file" id="file-upload-${product.id}" accept=".jpg, .jpeg, .png, .pdf" class="block w-full text-gray-700 border border-gray-300 rounded-md py-1 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" data-product-id="${product.id}" data-action="file-upload">
-                        <p id="file-status-${product.id}" class="text-xs text-red-500 mt-1">Please select a file for print.</p>
-                    </div>
-
                     <p id="price-${product.id}" class="text-lg font-bold text-blue-600 mb-3">Price: ₹${product.sizes[0].price}</p>
-                    <button class="add-to-cart-btn py-2 px-4 rounded-lg text-base font-semibold transition-colors duration-300 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 bg-gray-400 text-gray-700 cursor-not-allowed" data-product-id="${product.id}" disabled>
+                    <button class="add-to-cart-btn py-2 px-4 rounded-lg text-base font-semibold transition-colors duration-300 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 bg-blue-600 text-white hover:bg-blue-700" data-product-id="${product.id}">
                         Add to Cart
                     </button>
                 `;
                 productListDiv.appendChild(productCard);
             });
 
-            addEventListenersToProductCards(); // Attach event listeners after rendering
-            updateProductButtonStates(); // Update product card button states
+            addEventListenersToProductCards();
         }
 
         /**
          * Dynamically generates category filter buttons.
          */
         function renderCategoryFilters() {
-            categoryFiltersDiv.innerHTML = ''; // Clear existing filters
-            // Using English strings for category display and filtering
+            categoryFiltersDiv.innerHTML = '';
             const categories = ['All', 'Frame', 'Keychain', 'Mug', 'Card'];
 
             categories.forEach(category => {
@@ -472,8 +523,8 @@
                 button.className = `px-4 py-2 sm:px-6 sm:py-3 rounded-lg text-base sm:text-lg font-semibold transition-colors duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 ${selectedCategory === category ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`;
                 button.onclick = () => {
                     selectedCategory = category;
-                    renderCategoryFilters(); // Re-render to update active state
-                    renderProducts(); // Re-render products based on new filter
+                    renderCategoryFilters();
+                    renderProducts();
                 };
                 categoryFiltersDiv.appendChild(button);
             });
@@ -489,7 +540,7 @@
                 const productId = target.dataset.productId;
                 const productCardElement = target.closest('.product-card');
 
-                if (!productCardElement) return; // Not a click within a product card
+                if (!productCardElement) return;
 
                 const product = productsData.find(p => p.id === productId);
                 if (!product) return;
@@ -514,14 +565,11 @@
                     const optionValue = target.dataset.optionValue;
                     const currentPriceElement = productCardElement.querySelector(`#price-${productId}`);
 
-                    // Remove 'selected' class from all siblings of the same option type
                     productCardElement.querySelectorAll(`.option-button[data-option-type="${optionType}"]`).forEach(btn => {
                         btn.classList.remove('selected');
                     });
-                    // Add 'selected' class to the clicked button
                     target.classList.add('selected');
 
-                    // Update the dataset on the product card element for future reference
                     if (optionType === 'size') {
                         productCardElement.dataset.selectedSize = optionValue;
                         productCardElement.dataset.selectedPrice = target.dataset.optionPrice;
@@ -533,30 +581,21 @@
                     }
                 }
 
-                // Handle Add to Cart button click (after options and file are selected)
+                // Handle Add to Cart button click
                 if (target.classList.contains('add-to-cart-btn')) {
                     const selectedSizeName = productCardElement.dataset.selectedSize;
-                    const selectedPrice = parseFloat(productCardElement.dataset.selectedPrice); // Ensure it's a number
-
-                    const uploadedFileInput = productCardElement.querySelector(`input[type="file"][data-action="file-upload"]`);
-                    const uploadedFile = uploadedFileInput.files[0];
-
-                    if (!uploadedFile) {
-                        showOrderMessage('Please select a file for print before adding to cart.', 'bg-red-500');
-                        return;
-                    }
+                    const selectedPrice = parseFloat(productCardElement.dataset.selectedPrice);
 
                     const itemToAdd = {
                         productId: product.id,
                         name: product.name,
                         category: product.category,
-                        selectedSize: { size: selectedSizeName, price: selectedPrice }, // Reconstruct selectedSize object
-                        price: selectedPrice, // Use the price from the selected size option
+                        selectedSize: { size: selectedSizeName, price: selectedPrice },
+                        price: selectedPrice,
                         quantity: 1,
-                        uploadedFileName: uploadedFile.name,
                     };
 
-                    if (product.category === 'Frame') { // Check category in English for UI
+                    if (product.category === 'Frame') {
                         itemToAdd.selectedFrameType = productCardElement.dataset.selectedFrameType;
                         itemToAdd.selectedFrameColor = productCardElement.dataset.selectedFrameColor;
                     }
@@ -565,82 +604,49 @@
                     showOrderMessage('Product added to cart!', 'bg-green-500');
                 }
             });
-
-            // Event listener for File Upload inputs (needs to be direct as it's not a button)
-            productListDiv.querySelectorAll('input[type="file"][data-action="file-upload"]').forEach(input => {
-                input.onchange = (event) => {
-                    const productId = event.target.dataset.productId;
-                    const file = event.target.files[0];
-                    const fileStatusP = document.getElementById(`file-status-${productId}`);
-                    const addToCartBtn = productListDiv.querySelector(`.add-to-cart-btn[data-product-id="${productId}"]`);
-
-                    if (file && (file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'application/pdf')) {
-                        fileStatusP.textContent = `Selected file: ${file.name}`;
-                        fileStatusP.classList.remove('text-red-500');
-                        fileStatusP.classList.add('text-gray-500');
-                        addToCartBtn.disabled = false;
-                        addToCartBtn.classList.remove('bg-gray-400', 'text-gray-700', 'cursor-not-allowed');
-                        addToCartBtn.classList.add('bg-blue-600', 'text-white', 'hover:bg-blue-700');
-                    } else {
-                        fileStatusP.textContent = 'Only JPG, PNG and PDF files are accepted.';
-                        fileStatusP.classList.add('text-red-500');
-                        fileStatusP.classList.remove('text-gray-500');
-                        addToCartBtn.disabled = true;
-                        addToCartBtn.classList.add('bg-gray-400', 'text-gray-700', 'cursor-not-allowed');
-                        addToCartBtn.classList.remove('bg-blue-600', 'text-white', 'hover:bg-blue-700');
-                        showOrderMessage('Only JPG, PNG and PDF files are accepted.', 'bg-red-500');
-                    }
-                };
-            });
         }
 
 
-        /**
-         * Adds an item to the shopping cart.
-         * If an identical item (same product, size, options, file) already exists, increments its quantity.
-         * @param {Object} itemToAdd - The product item object to add.
-         */
         function addToCart(itemToAdd) {
             const existingItemIndex = cartItems.findIndex(item =>
                 item.productId === itemToAdd.productId &&
                 item.selectedSize.size === itemToAdd.selectedSize.size &&
                 (item.selectedFrameType === itemToAdd.selectedFrameType || !item.selectedFrameType) &&
-                (item.selectedFrameColor === itemToAdd.selectedFrameColor || !item.selectedFrameColor) &&
-                item.uploadedFileName === itemToAdd.uploadedFileName
+                (item.selectedFrameColor === itemToAdd.selectedFrameColor || !item.selectedFrameColor)
             );
 
             if (existingItemIndex > -1) {
                 cartItems[existingItemIndex].quantity += 1;
             } else {
-                cartItems.push({ ...itemToAdd, uniqueCartId: Date.now() + Math.random() }); // Add a unique ID for distinction in cart
+                cartItems.push({ ...itemToAdd, uniqueCartId: Date.now() + Math.random() });
             }
             updateCartItemCount();
+            // FIX: Call renderCartContent to immediately update the cart display
+            renderCartContent();
+            updatePlaceOrderButtonState();
         }
 
-        /**
-         * Removes an item from the shopping cart based on its unique index.
-         * @param {number} indexToRemove - The index of the item in the cartItems array to remove.
-         */
+
         function removeFromCart(indexToRemove) {
             cartItems.splice(indexToRemove, 1);
             updateCartItemCount();
-            renderCartContent(); // Re-render cart display
+            renderCartContent();
+            updatePlaceOrderButtonState();
         }
 
-        /**
-         * Clears all items from the shopping cart.
-         */
+
         function clearCart() {
             cartItems = [];
             updateCartItemCount();
-            renderCartContent(); // Re-render cart display
+            renderCartContent();
+            updatePlaceOrderButtonState();
         }
 
         /**
          * Renders the content of the shopping cart page.
          */
         function renderCartContent() {
-            cartContentDiv.innerHTML = ''; // Clear previous content
+            cartContentDiv.innerHTML = '';
 
             if (cartItems.length === 0) {
                 cartContentDiv.innerHTML = '<p class="text-center text-gray-600 text-lg">Your cart is empty.</p>';
@@ -677,9 +683,8 @@
                             <h3 class="text-lg font-semibold text-gray-800">${item.name}</h3>
                             <p class="text-sm text-gray-600">Size: ${item.selectedSize.size}</p>
                             ${item.category === 'Frame' ? `
-                                <p class="text-sm text-gray-600">Frame Type: ${item.selectedFrameType}, Color: ${item.selectedFrameColor}</p>
+                                <p class="text-sm text-gray-600">Frame Type: ${item.selectedFrameType || 'N/A'}, Color: ${item.selectedFrameColor || 'N/A'}</p>
                             ` : ''}
-                            <p class="text-sm text-gray-600">File: ${item.uploadedFileName}</p>
                             <p class="text-md font-bold text-blue-600">₹${item.price} x ${item.quantity}</p>
                         </div>
                         <button class="remove-from-cart-btn bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-400" data-cart-index="${index}" aria-label="Remove from cart">
@@ -695,6 +700,14 @@
             cartHtml += `
                 <div class="text-right text-xl sm:text-2xl font-bold text-gray-900 mb-6">
                     Total: ₹<span id="cart-total">${calculateCartTotal()}</span>
+                </div>
+
+                <!-- Order File Upload Section (New) -->
+                <div class="mb-6 p-4 border rounded-lg bg-gray-50">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Upload File for Order</h3>
+                    <p class="text-sm text-gray-600 mb-2">Please upload *one* file (JPG, PNG, PDF) for your entire order. This file will be stored in our Google Drive.</p>
+                    <input type="file" id="order-file-upload" accept=".jpg, .jpeg, .png, .pdf" class="block w-full text-gray-700 border border-gray-300 rounded-md py-1 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <p id="order-file-status" class="text-xs text-red-500 mt-1">No file selected.</p>
                 </div>
 
                 <!-- Delivery Options -->
@@ -723,23 +736,11 @@
             `;
             cartContentDiv.innerHTML = cartHtml;
 
-            // Attach event listeners for cart page elements
             attachCartEventListeners();
         }
 
-        /**
-         * Calculates the total price of items in the cart.
-         * @returns {number} The total price.
-         */
-        function calculateCartTotal() {
-            return cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
-        }
 
-        /**
-         * Attaches event listeners for elements within the cart page.
-         */
         function attachCartEventListeners() {
-            // Remove from cart buttons
             document.querySelectorAll('.remove-from-cart-btn').forEach(button => {
                 button.onclick = (event) => {
                     const index = parseInt(event.currentTarget.dataset.cartIndex);
@@ -747,7 +748,6 @@
                 };
             });
 
-            // Delivery option radio buttons
             const deliveryOptionRadios = document.querySelectorAll('input[name="deliveryOption"]');
             const deliveryAddressContainer = document.getElementById('delivery-address-container');
 
@@ -761,16 +761,59 @@
                 };
             });
 
-            // Place Order button
-            document.getElementById('place-order-btn').onclick = handlePlaceOrder;
+            const orderFileUploadInput = document.getElementById('order-file-upload');
+            const orderFileStatusP = document.getElementById('order-file-status');
+            const placeOrderBtn = document.getElementById('place-order-btn');
+
+            orderFileUploadInput.onchange = (event) => {
+                const file = event.target.files[0];
+                if (file && (file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'application/pdf')) {
+                    orderFileStatusP.textContent = `Selected file: ${file.name}`;
+                    orderFileStatusP.classList.remove('text-red-500');
+                    orderFileStatusP.classList.add('text-gray-500');
+                    updatePlaceOrderButtonState();
+                } else {
+                    orderFileStatusP.textContent = 'Only JPG, PNG and PDF files are accepted for order.';
+                    orderFileStatusP.classList.add('text-red-500');
+                    orderFileStatusP.classList.remove('text-gray-500');
+                    updatePlaceOrderButtonState();
+                    showOrderMessage('Only JPG, PNG and PDF files are accepted for order.', 'bg-red-500');
+                }
+            };
+
+            if (placeOrderBtn) {
+                placeOrderBtn.onclick = handlePlaceOrder;
+                updatePlaceOrderButtonState();
+            }
         }
 
         /**
-         * Handles the order placement logic, sending data to Google Sheet.
+         * Updates the state of the Place Order button based on cart items and file selection.
+         */
+        function updatePlaceOrderButtonState() {
+            const placeOrderBtn = document.getElementById('place-order-btn');
+            if (!placeOrderBtn) return;
+
+            const orderFileUploadInput = document.getElementById('order-file-upload');
+            const isFileSelected = orderFileUploadInput && orderFileUploadInput.files.length > 0;
+            const isCartNotEmpty = cartItems.length > 0;
+
+            if (isFileSelected && isCartNotEmpty) {
+                placeOrderBtn.disabled = false;
+                placeOrderBtn.classList.remove('bg-gray-400', 'text-gray-700', 'cursor-not-allowed');
+                placeOrderBtn.classList.add('bg-green-600', 'text-white', 'hover:bg-green-700');
+            } else {
+                placeOrderBtn.disabled = true;
+                placeOrderBtn.classList.add('bg-gray-400', 'text-gray-700', 'cursor-not-allowed');
+                placeOrderBtn.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
+            }
+        }
+
+        /**
+         * Handles the order placement logic, sending data and file to Google Sheet.
          */
         async function handlePlaceOrder() {
-            // Replace this URL with your actual Google Apps Script Web App URL
-            const googleSheetUrl = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE'; // MUST BE REPLACED BY USER
+            const googleSheetUrl = 'https://script.google.com/macros/s/AKfycbz0uEVl8syelRvVLq1eDBxQcA9mPxNTAjq5RjRTD7kzVbs2k2cvd2EBTBoDNvXv-I0/exec'; // Your provided URL
 
             if (cartItems.length === 0) {
                 showOrderMessage('Your cart is empty.', 'bg-red-500');
@@ -782,6 +825,8 @@
             const customerAddress = document.getElementById('customerAddress').value.trim();
             const deliveryOption = document.querySelector('input[name="deliveryOption"]:checked').value;
             const deliveryAddress = document.getElementById('deliveryAddress').value.trim();
+            const orderFileUploadInput = document.getElementById('order-file-upload');
+            const uploadedFile = orderFileUploadInput.files[0];
 
             if (!customerName || !customerPhone) {
                 showOrderMessage('Please enter your name and phone number.', 'bg-red-500');
@@ -795,9 +840,38 @@
                 showOrderMessage('Please enter your address for pickup.', 'bg-red-500');
                 return;
             }
+            if (!uploadedFile) {
+                showOrderMessage('Please upload a file for your order.', 'bg-red-500');
+                return;
+            }
 
             const orderId = `ORDER-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
             const orderDate = new Date().toLocaleString();
+
+            // Extract frameType and frameColor from the first applicable item in the cart
+            let orderFrameType = 'N/A';
+            let orderFrameColor = 'N/A';
+            const firstFrameItem = cartItems.find(item => item.category === 'Frame');
+            if (firstFrameItem) {
+                orderFrameType = firstFrameItem.selectedFrameType || 'N/A';
+                orderFrameColor = firstFrameItem.selectedFrameColor || 'N/A';
+            }
+
+            // Summarize cart items for the sheet
+            let cartSummary = '';
+            if (cartItems.length > 0) {
+                const itemNames = cartItems.map(item => {
+                    let itemDetails = item.name;
+                    if (item.category === 'Frame' && item.selectedFrameType && item.selectedFrameColor) {
+                        itemDetails += ` (${item.selectedFrameType}, ${item.selectedFrameColor})`;
+                    }
+                    return `${itemDetails} (x${item.quantity})`;
+                });
+                cartSummary = `${cartItems.length} items: ${itemNames.join(', ')}`;
+            } else {
+                cartSummary = 'No items in cart';
+            }
+
 
             const formData = new FormData();
             formData.append('orderId', orderId);
@@ -808,87 +882,78 @@
             formData.append('deliveryOption', deliveryOption);
             formData.append('deliveryAddress', deliveryOption === 'delivery' ? deliveryAddress : 'N/A');
             formData.append('totalAmount', calculateCartTotal());
-            formData.append('cartItems', JSON.stringify(cartItems.map(item => ({
-                id: item.productId,
-                name: item.name,
-                category: item.category,
-                size: item.selectedSize.size,
-                price: item.price,
-                quantity: item.quantity,
-                frameType: item.selectedFrameType || 'N/A', // Corrected to use item.selectedFrameType
-                frameColor: item.selectedFrameColor || 'N/A', // Corrected to use item.selectedFrameColor
-                uploadedFileName: item.uploadedFileName || 'No File',
-            }))));
+            formData.append('cartItems', cartSummary); // Send summarized cart info
+
+            // Append new top-level frame details
+            formData.append('frameType', orderFrameType);
+            formData.append('frameColor', orderFrameColor);
+
+            // Append the actual file to formData
+            if (uploadedFile) {
+                formData.append('uploadedFile', uploadedFile);
+                formData.append('uploadedFileName', uploadedFile.name); // Send filename as a separate field
+            } else {
+                formData.append('uploadedFileName', 'No File');
+            }
+
 
             try {
+                // Show loading state
+                const placeOrderBtn = document.getElementById('place-order-btn');
+                placeOrderBtn.disabled = true;
+                placeOrderBtn.innerHTML = 'Processing... <span class="loader"></span>';
                 showOrderMessage('Order processing...', 'bg-blue-500');
+
                 const response = await fetch(googleSheetUrl, {
                     method: 'POST',
                     body: formData,
                     mode: 'no-cors', // Critical for Google Apps Script to avoid CORS issues
                 });
 
-                showOrderMessage('Order placed successfully! (Check Google Sheet)', 'bg-green-500');
-                console.log('Order submitted:', { orderId, orderDate, customerName, customerPhone, customerAddress, cartItems, deliveryOption, deliveryAddress, totalAmount: calculateCartTotal() });
-                clearCart(); // Clear cart after successful order
-                // Reset form fields
+                showOrderMessage('Order placed successfully! (Check Google Sheet and Drive)', 'bg-green-500');
+                console.log('Order submitted:', {
+                    orderId, orderDate, customerName, customerPhone, customerAddress,
+                    cartSummary, deliveryOption, deliveryAddress, totalAmount: calculateCartTotal(),
+                    frameType: orderFrameType, frameColor: orderFrameColor,
+                    uploadedFileName: uploadedFile ? uploadedFile.name : 'No File'
+                });
+                clearCart();
+                // Reset form fields and file input
                 document.getElementById('customerName').value = '';
                 document.getElementById('customerPhone').value = '';
                 document.getElementById('customerAddress').value = '';
                 document.getElementById('deliveryAddress').value = '';
-                document.getElementById('delivery-option').checked = true; // Reset to delivery
-                document.getElementById('delivery-address-container').style.display = 'block'; // Ensure container is visible
+                document.getElementById('delivery-option').checked = true;
+                document.getElementById('delivery-address-container').style.display = 'block';
+                document.getElementById('order-file-upload').value = '';
+                document.getElementById('order-file-status').textContent = 'No file selected.';
+                document.getElementById('order-file-status').classList.remove('text-gray-500');
+                document.getElementById('order-file-status').classList.add('text-red-500');
+                updatePlaceOrderButtonState();
+
             } catch (error) {
                 console.error('Error submitting order:', error);
                 showOrderMessage('Error submitting order. Please try again.', 'bg-red-500');
-            }
-        }
-
-        /**
-         * Disables/enables 'Add to Cart' buttons based on whether a file is selected for the product.
-         */
-        function updateProductButtonStates() {
-            document.querySelectorAll('.product-card').forEach(card => {
-                const productId = card.querySelector('.add-to-cart-btn').dataset.productId;
-                const uploadedFileInput = card.querySelector(`#file-upload-${productId}`);
-                const addToCartBtn = card.querySelector('.add-to-cart-btn');
-
-                const isFileSelected = uploadedFileInput && uploadedFileInput.files.length > 0;
-
-                if (isFileSelected) {
-                    addToCartBtn.disabled = false;
-                    addToCartBtn.classList.remove('bg-gray-400', 'text-gray-700', 'cursor-not-allowed');
-                    addToCartBtn.classList.add('bg-blue-600', 'text-white', 'hover:bg-blue-700');
-                } else {
-                    addToCartBtn.disabled = true;
-                    addToCartBtn.classList.add('bg-gray-400', 'text-gray-700', 'cursor-not-allowed');
-                    addToCartBtn.classList.remove('bg-blue-600', 'text-white', 'hover:bg-blue-700');
-                }
-            });
-
-            // Also manage the Place Order button on the cart page if it's currently displayed
-            const placeOrderBtn = document.getElementById('place-order-btn');
-            if (placeOrderBtn) {
-                if (cartItems.length > 0) {
-                    placeOrderBtn.disabled = false;
-                    placeOrderBtn.classList.remove('bg-gray-400', 'text-gray-700', 'cursor-not-allowed');
-                    placeOrderBtn.classList.add('bg-green-600', 'text-white', 'hover:bg-green-700');
-                } else {
-                    placeOrderBtn.disabled = true;
-                    placeOrderBtn.classList.add('bg-gray-400', 'text-gray-700', 'cursor-not-allowed');
-                    placeOrderBtn.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
-                }
+            } finally {
+                // Reset button text and state
+                const placeOrderBtn = document.getElementById('place-order-btn');
+                placeOrderBtn.innerHTML = 'Place Order';
+                updatePlaceOrderButtonState();
             }
         }
 
 
         // --- Initialization on Window Load ---
         window.onload = () => {
-            document.getElementById('current-year').textContent = new Date().getFullYear();
-            renderCategoryFilters(); // Render filter buttons
-            renderProducts(); // Render initial product list
+            const currentYearSpan = document.getElementById('current-year');
+            if (currentYearSpan) { // Added null check here
+                currentYearSpan.textContent = new Date().getFullYear();
+            }
+            renderCategoryFilters();
+            renderProducts();
             showPage('home'); // Show home page by default
-            updateCartItemCount(); // Update cart count on load
+            updateCartItemCount();
+            updatePlaceOrderButtonState();
         };
     </script>
 </body>
