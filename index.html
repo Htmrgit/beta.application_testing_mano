@@ -129,6 +129,12 @@
         main {
             padding-bottom: 5rem; /* Enough space for the fixed bottom nav */
         }
+
+        /* Styles for read-only textarea */
+        textarea.read-only {
+            background-color: #e2e8f0; /* Tailwind gray-200 */
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 flex flex-col">
@@ -140,7 +146,7 @@
     <header class="bg-blue-700 p-4 shadow-lg text-white text-3xl font-extrabold tracking-wide text-center">
         <a href="#" class="flex items-center justify-center" onclick="showPage('home')">
             <img src="https://placehold.co/48x48/ffffff/000000?text=Logo" alt="App Logo" class="h-10 w-10 rounded-full mr-3" />
-            Print Max Gift Store
+            Print on Demand
         </a>
     </header>
 
@@ -335,14 +341,17 @@
         let currentActivePage = 'home';
         let selectedCategory = 'All'; // Default filter category
 
+        // --- Shop Address (New) ---
+        const shopAddress = "123, Custom Print Street, City, Country"; // Your shop's actual address, previously defined in About Us section
+
         // --- DOM Elements ---
         const productListDiv = document.getElementById('product-list');
         const categoryFiltersDiv = document.getElementById('category-filters');
         const cartContentDiv = document.getElementById('cart-content');
         const orderMessageDiv = document.getElementById('order-message');
         const cartItemCountSpan = document.getElementById('cart-item-count');
-        // Select all bottom navigation buttons
         const bottomNavButtons = document.querySelectorAll('#bottom-nav button');
+
 
         // --- Helper Functions ---
 
@@ -372,7 +381,6 @@
             if (cartItems.length > 0) {
                 cartItemCountSpan.textContent = cartItems.length;
                 cartItemCountSpan.classList.remove('hidden');
-                // Adjust position for smaller icon if needed, e.g. top-0, right-0
                 cartItemCountSpan.classList.add('top-0', 'right-1', 'h-4', 'w-4', 'text-xs');
             } else {
                 cartItemCountSpan.classList.add('hidden');
@@ -402,7 +410,6 @@
             // Update active state for bottom nav buttons
             bottomNavButtons.forEach(button => {
                 button.classList.remove('active-nav-btn');
-                // The button IDs were changed to match the bottom nav, e.g., nav-home-bottom
                 if (button.id === `nav-${pageId}-bottom`) {
                     button.classList.add('active-nav-btn');
                 }
@@ -426,7 +433,6 @@
 
             productsToDisplay.forEach((product, index) => {
                 const productCard = document.createElement('div');
-                // Added fade-in animation class and more compact classes for better mobile view and more items per row
                 productCard.className = 'product-card bg-white rounded-lg shadow-xl p-4 m-2 w-full sm:w-[48%] md:w-[31%] lg:w-[23%] xl:w-[18%] flex flex-col transform transition-all duration-300 hover:scale-105 hover:shadow-2xl font-inter fade-in';
                 productCard.style.animationDelay = `${index * 0.1}s`; // Stagger animation
 
@@ -621,8 +627,7 @@
                 cartItems.push({ ...itemToAdd, uniqueCartId: Date.now() + Math.random() });
             }
             updateCartItemCount();
-            // FIX: Call renderCartContent to immediately update the cart display
-            renderCartContent();
+            renderCartContent(); // Call renderCartContent to immediately update the cart display
             updatePlaceOrderButtonState();
         }
 
@@ -668,7 +673,7 @@
                         </div>
                     </div>
                     <div>
-                        <label for="customerAddress" class="block text-gray-700 text-sm font-bold mb-2">Your Address (for pickup):</label>
+                        <label for="customerAddress" class="block text-gray-700 text-sm font-bold mb-2">Your Address:</label> <!-- Changed label text -->
                         <textarea id="customerAddress" rows="3" class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Your Full Address"></textarea>
                     </div>
                 </div>
@@ -736,28 +741,59 @@
             `;
             cartContentDiv.innerHTML = cartHtml;
 
+            // Re-get references to elements after they are rendered
+            // This is crucial because renderCartContent rebuilds the HTML
+            // and previous references might become null.
+            const customerAddressTextareaLocal = document.getElementById('customerAddress');
+            const deliveryAddressContainerLocal = document.getElementById('delivery-address-container');
+            const deliveryOptionRadioLocal = document.getElementById('delivery-option');
+            const pickupOptionRadioLocal = document.getElementById('pickup-option');
+
+            // Apply initial state based on default selected radio (delivery)
+            if (deliveryOptionRadioLocal && deliveryOptionRadioLocal.checked) {
+                customerAddressTextareaLocal.value = '';
+                customerAddressTextareaLocal.readOnly = false;
+                customerAddressTextareaLocal.classList.remove('read-only');
+                deliveryAddressContainerLocal.style.display = 'block';
+            } else if (pickupOptionRadioLocal && pickupOptionRadioLocal.checked) {
+                customerAddressTextareaLocal.value = shopAddress;
+                customerAddressTextareaLocal.readOnly = true;
+                customerAddressTextareaLocal.classList.add('read-only');
+                deliveryAddressContainerLocal.style.display = 'none';
+            }
+
+
             attachCartEventListeners();
         }
 
 
         function attachCartEventListeners() {
-            document.querySelectorAll('.remove-from-cart-btn').forEach(button => {
-                button.onclick = (event) => {
-                    const index = parseInt(event.currentTarget.dataset.cartIndex);
-                    removeFromCart(index);
-                };
-            });
-
+            // Re-get references to radio buttons and address fields here because renderCartContent rebuilds them.
             const deliveryOptionRadios = document.querySelectorAll('input[name="deliveryOption"]');
-            const deliveryAddressContainer = document.getElementById('delivery-address-container');
+            const customerAddressTextareaRef = document.getElementById('customerAddress');
+            const deliveryAddressContainerRef = document.getElementById('delivery-address-container');
+
 
             deliveryOptionRadios.forEach(radio => {
                 radio.onchange = (event) => {
                     if (event.target.value === 'delivery') {
-                        deliveryAddressContainer.style.display = 'block';
-                    } else {
-                        deliveryAddressContainer.style.display = 'none';
+                        deliveryAddressContainerRef.style.display = 'block';
+                        customerAddressTextareaRef.value = ''; // Clear pickup address
+                        customerAddressTextareaRef.readOnly = false;
+                        customerAddressTextareaRef.classList.remove('read-only'); // Remove read-only styling
+                    } else { // 'pickup'
+                        deliveryAddressContainerRef.style.display = 'none';
+                        customerAddressTextareaRef.value = shopAddress; // Set shop address
+                        customerAddressTextareaRef.readOnly = true;
+                        customerAddressTextareaRef.classList.add('read-only'); // Add read-only styling
                     }
+                };
+            });
+
+            document.querySelectorAll('.remove-from-cart-btn').forEach(button => {
+                button.onclick = (event) => {
+                    const index = parseInt(event.currentTarget.dataset.cartIndex);
+                    removeFromCart(index);
                 };
             });
 
@@ -822,26 +858,33 @@
 
             const customerName = document.getElementById('customerName').value.trim();
             const customerPhone = document.getElementById('customerPhone').value.trim();
-            const customerAddress = document.getElementById('customerAddress').value.trim();
+            
             const deliveryOption = document.querySelector('input[name="deliveryOption"]:checked').value;
-            const deliveryAddress = document.getElementById('deliveryAddress').value.trim();
-            const orderFileUploadInput = document.getElementById('order-file-upload');
-            const uploadedFile = orderFileUploadInput.files[0];
+            let finalCustomerAddress = ''; // This will be the address used in the 'customerAddress' column in the sheet
+            let finalDeliveryAddress = ''; // This will be the address used in the 'deliveryAddress' column in the sheet
 
+            if (deliveryOption === 'delivery') {
+                finalDeliveryAddress = document.getElementById('deliveryAddress').value.trim();
+                finalCustomerAddress = 'N/A (Delivery Selected)'; // Indicate in sheet that pickup address is not applicable
+            } else { // pickup
+                finalCustomerAddress = shopAddress; // Use the shop address for pickup
+                finalDeliveryAddress = 'N/A (Pickup Selected)'; // Indicate in sheet that delivery address is not applicable
+            }
+
+
+            const uploadedFile = document.getElementById('order-file-upload').files[0];
+
+            // Basic validations
             if (!customerName || !customerPhone) {
-                showOrderMessage('Please enter your name and phone number.', 'bg-red-500');
+                showOrderMessage('कृपया अपना नाम और फोन नंबर दर्ज करें।', 'bg-red-500');
                 return;
             }
-            if (deliveryOption === 'delivery' && !deliveryAddress) {
-                showOrderMessage('Please enter delivery address.', 'bg-red-500');
-                return;
-            }
-            if (deliveryOption === 'pickup' && !customerAddress) {
-                showOrderMessage('Please enter your address for pickup.', 'bg-red-500');
+            if (deliveryOption === 'delivery' && !finalDeliveryAddress) {
+                showOrderMessage('कृपया डिलीवरी पता दर्ज करें।', 'bg-red-500');
                 return;
             }
             if (!uploadedFile) {
-                showOrderMessage('Please upload a file for your order.', 'bg-red-500');
+                showOrderMessage('कृपया अपने ऑर्डर के लिए एक फ़ाइल अपलोड करें।', 'bg-red-500');
                 return;
             }
 
@@ -878,9 +921,9 @@
             formData.append('orderDate', orderDate);
             formData.append('customerName', customerName);
             formData.append('customerPhone', customerPhone);
-            formData.append('customerAddress', customerAddress);
+            formData.append('customerAddress', finalCustomerAddress); // Use the final calculated pickup address
             formData.append('deliveryOption', deliveryOption);
-            formData.append('deliveryAddress', deliveryOption === 'delivery' ? deliveryAddress : 'N/A');
+            formData.append('deliveryAddress', finalDeliveryAddress); // Use the final calculated delivery address
             formData.append('totalAmount', calculateCartTotal());
             formData.append('cartItems', cartSummary); // Send summarized cart info
 
@@ -902,7 +945,7 @@
                 const placeOrderBtn = document.getElementById('place-order-btn');
                 placeOrderBtn.disabled = true;
                 placeOrderBtn.innerHTML = 'Processing... <span class="loader"></span>';
-                showOrderMessage('Order processing...', 'bg-blue-500');
+                showOrderMessage('ऑर्डर प्रोसेस हो रहा है...', 'bg-blue-500');
 
                 const response = await fetch(googleSheetUrl, {
                     method: 'POST',
@@ -910,10 +953,10 @@
                     mode: 'no-cors', // Critical for Google Apps Script to avoid CORS issues
                 });
 
-                showOrderMessage('Order placed successfully! (Check Google Sheet and Drive)', 'bg-green-500');
-                console.log('Order submitted:', {
-                    orderId, orderDate, customerName, customerPhone, customerAddress,
-                    cartSummary, deliveryOption, deliveryAddress, totalAmount: calculateCartTotal(),
+                showOrderMessage('ऑर्डर सफलतापूर्वक दे दिया गया! (Google शीट और ड्राइव देखें)', 'bg-green-500');
+                console.log('ऑर्डर सबमिट किया गया:', {
+                    orderId, orderDate, customerName, customerPhone, finalCustomerAddress,
+                    cartSummary, deliveryOption, finalDeliveryAddress, totalAmount: calculateCartTotal(),
                     frameType: orderFrameType, frameColor: orderFrameColor,
                     uploadedFileName: uploadedFile ? uploadedFile.name : 'No File'
                 });
@@ -921,10 +964,25 @@
                 // Reset form fields and file input
                 document.getElementById('customerName').value = '';
                 document.getElementById('customerPhone').value = '';
-                document.getElementById('customerAddress').value = '';
+                document.getElementById('customerAddress').value = ''; // Reset, will be set by radio change if pickup is default
                 document.getElementById('deliveryAddress').value = '';
-                document.getElementById('delivery-option').checked = true;
-                document.getElementById('delivery-address-container').style.display = 'block';
+                document.getElementById('delivery-option').checked = true; // Set delivery as default
+                // Ensure pickup address field is reset correctly after order placement
+                const customerAddressTextareaReset = document.getElementById('customerAddress');
+                const deliveryAddressContainerReset = document.getElementById('delivery-address-container');
+
+                if (deliveryOption === 'delivery') { // If last order was delivery, set default back to delivery
+                    customerAddressTextareaReset.value = '';
+                    customerAddressTextareaReset.readOnly = false;
+                    customerAddressTextareaReset.classList.remove('read-only');
+                    deliveryAddressContainerReset.style.display = 'block';
+                } else { // If last order was pickup, ensure it resets to delivery state (empty & editable)
+                    customerAddressTextareaReset.value = '';
+                    customerAddressTextareaReset.readOnly = false;
+                    customerAddressTextareaReset.classList.remove('read-only');
+                    deliveryAddressContainerReset.style.display = 'block';
+                }
+
                 document.getElementById('order-file-upload').value = '';
                 document.getElementById('order-file-status').textContent = 'No file selected.';
                 document.getElementById('order-file-status').classList.remove('text-gray-500');
@@ -932,8 +990,8 @@
                 updatePlaceOrderButtonState();
 
             } catch (error) {
-                console.error('Error submitting order:', error);
-                showOrderMessage('Error submitting order. Please try again.', 'bg-red-500');
+                console.error('ऑर्डर सबमिट करने में त्रुटि:', error);
+                showOrderMessage('ऑर्डर सबमिट करने में त्रुटि। कृपया पुनः प्रयास करें।', 'bg-red-500');
             } finally {
                 // Reset button text and state
                 const placeOrderBtn = document.getElementById('place-order-btn');
@@ -946,7 +1004,7 @@
         // --- Initialization on Window Load ---
         window.onload = () => {
             const currentYearSpan = document.getElementById('current-year');
-            if (currentYearSpan) { // Added null check here
+            if (currentYearSpan) {
                 currentYearSpan.textContent = new Date().getFullYear();
             }
             renderCategoryFilters();
@@ -954,6 +1012,19 @@
             showPage('home'); // Show home page by default
             updateCartItemCount();
             updatePlaceOrderButtonState();
+            
+            // Initial state for address fields on page load
+            // Since delivery is default, customerAddress should be empty and editable, deliveryAddress shown
+            const customerAddressFieldInit = document.getElementById('customerAddress');
+            const deliveryAddressContainerInit = document.getElementById('delivery-address-container');
+            if (customerAddressFieldInit) {
+                customerAddressFieldInit.value = '';
+                customerAddressFieldInit.readOnly = false;
+                customerAddressFieldInit.classList.remove('read-only');
+            }
+            if (deliveryAddressContainerInit) {
+                deliveryAddressContainerInit.style.display = 'block';
+            }
         };
     </script>
 </body>
