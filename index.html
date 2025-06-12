@@ -3,1029 +3,1032 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Print on Demand</title>
+    <title>Print-On-Demand Store</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts - Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <style>
-        /* Custom styles for font and any specific overrides */
+        /* Inter font for better readability */
         body {
             font-family: 'Inter', sans-serif;
         }
-        /* Hide pages by default, JavaScript will show the active one */
-        .page-section {
+
+        /* Hide pages by default */
+        .page {
             display: none;
         }
-        .page-section.active {
+
+        /* Show active page */
+        .page.active {
             display: block;
         }
-        /* Style for selected option buttons */
-        .option-button.selected {
-            background-color: #3b82f6; /* Tailwind blue-500 */
-            color: white;
-            border-color: #2563eb; /* Tailwind blue-600 */
-        }
-        /* Custom scrollbar for modern design */
-        ::-webkit-scrollbar {
-            width: 8px;
+
+        /* Custom scrollbar for product details */
+        .product-gallery-scroll::-webkit-scrollbar {
             height: 8px;
         }
-        ::-webkit-scrollbar-track {
+        .product-gallery-scroll::-webkit-scrollbar-track {
             background: #f1f1f1;
             border-radius: 10px;
         }
-        ::-webkit-scrollbar-thumb {
+        .product-gallery-scroll::-webkit-scrollbar-thumb {
             background: #888;
             border-radius: 10px;
         }
-        ::-webkit-scrollbar-thumb:hover {
+        .product-gallery-scroll::-webkit-scrollbar-thumb:hover {
             background: #555;
         }
 
-        /* Animation for product card entry */
-        .product-card.fade-in {
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeInAndSlideUp 0.5s ease-out forwards;
-        }
-
-        @keyframes fadeInAndSlideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        /* Loader styles */
-        .loader {
-            border: 4px solid #f3f3f3; /* Light grey */
-            border-top: 4px solid #3498db; /* Blue */
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 2s linear infinite;
-            display: inline-block;
-            vertical-align: middle;
-            margin-left: 8px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Styles for the bottom navigation bar */
-        #bottom-nav {
+        /* Custom modal overlay for alerts and product details */
+        .custom-modal-overlay {
+            display: none; /* Hidden by default, will be set to flex by JS */
             position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background-color: #1e3a8a; /* Darker blue, Tailwind blue-800 */
-            color: white;
-            padding: 0.5rem 0; /* Reduced padding */
-            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2); /* Shadow on top */
             z-index: 1000;
-            display: flex;
-            justify-content: space-around;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            justify-content: center;
             align-items: center;
         }
-
-        #bottom-nav button {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 0.5rem 0.25rem; /* Adjust padding for smaller buttons */
-            color: white;
-            font-weight: 600;
-            font-size: 0.75rem; /* Smaller font for mobile */
-            transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out;
-            border-radius: 0.5rem; /* Rounded corners for buttons */
-            min-width: 60px; /* Ensure buttons have minimum width */
+        .custom-modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 90%;
+            width: 400px;
             text-align: center;
         }
-
-        #bottom-nav button:hover {
-            background-color: #2563eb; /* Tailwind blue-700 on hover */
+        .custom-modal-close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
         }
-
-        /* Active button style */
-        #bottom-nav button.active-nav-btn {
-            color: #bfdbfe; /* Tailwind blue-200 */
-            background-color: #172554; /* Even darker blue for active state */
-        }
-
-        #bottom-nav svg {
-            width: 1.5rem; /* Icon size */
-            height: 1.5rem;
-            margin-bottom: 0.2rem; /* Space between icon and text */
-        }
-
-        /* Adjust main content padding to prevent being hidden by fixed footer */
-        main {
-            padding-bottom: 5rem; /* Enough space for the fixed bottom nav */
-        }
-
-        /* Styles for read-only textarea */
-        textarea.read-only {
-            background-color: #e2e8f0; /* Tailwind gray-200 */
-            cursor: not-allowed;
+        .custom-modal-close:hover,
+        .custom-modal-close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
         }
     </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 flex flex-col">
-
-    <!-- Order Message Notification -->
-    <div id="order-message" class="fixed top-4 left-1/2 -translate-x-1/2 px-6 py-3 rounded-lg text-white font-semibold shadow-lg z-50 transition-opacity duration-300 opacity-0 hidden" role="alert"></div>
-
-    <!-- Top Header Bar (App Title Only) -->
-    <header class="bg-blue-700 p-4 shadow-lg text-white text-3xl font-extrabold tracking-wide text-center">
-        <a href="#" class="flex items-center justify-center" onclick="showPage('home')">
-            <img src="https://placehold.co/48x48/ffffff/000000?text=Logo" alt="App Logo" class="h-10 w-10 rounded-full mr-3" />
-            Print on Demand
-        </a>
+<body class="bg-gray-100 flex flex-col min-h-screen">
+    <!-- Header -->
+    <header class="bg-blue-600 text-white p-4 shadow-md flex items-center justify-center relative z-40">
+        <div class="flex items-center space-x-3">
+            <!-- Store Logo (Replace with your logo image URL) -->
+            <!-- Placeholder image URL for logo: https://placehold.co/40x40/ffffff/000000?text=LOGO -->
+            <img id="storeLogo" src="https://placehold.co/40x40/ffffff/000000?text=LOGO" alt="Store Logo" class="h-10 w-10 rounded-full object-cover">
+            <h1 class="text-3xl font-bold">Print-On-Demand Store</h1>
+        </div>
     </header>
 
-    <!-- Main Content Area -->
-    <main class="flex-grow container mx-auto p-2 sm:p-4 pb-20"> <!-- Added pb-20 to accommodate bottom nav -->
+    <!-- Main content area -->
+    <div class="flex-grow pb-20">
+        <!-- Home Page -->
+        <section id="homePage" class="page active p-4">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center mt-4">Our Products</h1>
 
-        <!-- Home Page Section -->
-        <section id="home-page" class="page-section active p-4 sm:p-8">
-            <h2 class="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-8 sm:mb-10 mt-4">Our Products</h2>
-
-            <!-- Category Filter Section -->
-            <div id="category-filters" class="flex flex-wrap justify-center gap-2 sm:gap-4 mb-8">
-                <!-- Filter buttons will be inserted here by JavaScript -->
+            <!-- Category Filters -->
+            <div class="flex flex-wrap justify-center gap-3 mb-8">
+                <button class="category-filter-btn bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-300 ease-in-out active" data-category="All">All</button>
+                <button class="category-filter-btn bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-6 rounded-lg shadow-md transition duration-300 ease-in-out" data-category="Frame">Frame</button>
+                <button class="category-filter-btn bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-6 rounded-lg shadow-md transition duration-300 ease-in-out" data-category="Keychain">Keychain</button>
+                <button class="category-filter-btn bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-6 rounded-lg shadow-md transition duration-300 ease-in-out" data-category="Mug">Mug</button>
+                <button class="category-filter-btn bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-6 rounded-lg shadow-md transition duration-300 ease-in-out" data-category="Card">Card</button>
             </div>
 
-            <!-- Product Display Area -->
-            <div id="product-list" class="flex flex-wrap justify-center">
-                <!-- Product cards will be inserted here by JavaScript -->
-            </div>
-        </section>
-
-        <!-- About Page Section -->
-        <section id="about-page" class="page-section p-4 sm:p-8 max-w-4xl mx-auto bg-white rounded-lg shadow-xl my-5 sm:my-10">
-            <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-6 text-center">About Us</h2>
-            <div class="text-base sm:text-lg text-gray-700 leading-relaxed">
-                <p class="mb-4">
-                    Welcome to our Print-on-Demand store! We are dedicated to transforming your ideas into real, beautiful products. Whether it's a personalized gift or promotional material for your business, we offer high-quality frames, keychains, mugs, and cards that are custom-printed to your specifications.
-                </p>
-                <p class="mb-4">
-                    Our mission is to help you create unique and memorable products that truly matter. We believe that every story, every photo, and every moment should be cherished, and our products help you do just that.
-                </p>
-                <h3 class="text-xl sm:text-2xl font-semibold text-gray-800 mt-6 sm:mt-8 mb-4 border-b-2 border-blue-400 pb-2">Our Shop Information:</h3>
-                <ul class="list-disc list-inside space-y-2">
-                    <li><span class="font-bold">Established:</span> 2023</li>
-                    <li><span class="font-bold">Location:</span> Online (Worldwide Shipping)</li>
-                    <li><span class="font-bold">Specialization:</span> Custom Printed Frames, Keychains, Mugs, and Cards</li>
-                    <li><span class="font-bold">Quality:</span> We are committed to using the best quality materials and printing techniques in all our products.</li>
-                    <li><span class="font-bold">Customer Service:</span> Your satisfaction is our top priority. Do not hesitate to contact us with any questions or concerns.</li>
-                    </ul>
-                <p class="mt-6 text-center text-gray-600">
-                    We look forward to creating something amazing for you!
-                </p>
+            <!-- Product Grid -->
+            <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-4">
+                <!-- Products will be loaded here by JavaScript -->
             </div>
         </section>
 
-        <!-- Contact Page Section -->
-        <section id="contact-page" class="page-section p-4 sm:p-8 max-w-2xl mx-auto bg-white rounded-lg shadow-xl my-5 sm:my-10">
-            <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-6 text-center">Contact Us</h2>
-            <div class="text-base sm:text-lg text-gray-700 leading-relaxed">
-                <p class="mb-4">
-                    Feel free to contact us! We welcome any questions or feedback.
+        <!-- Cart Page -->
+        <section id="cartPage" class="page p-4">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center mt-4">Your Cart</h1>
+            <div id="cartItems" class="space-y-4 mb-8">
+                <!-- Cart items will be loaded here by JavaScript -->
+                <p id="emptyCartMessage" class="text-center text-gray-600 text-lg">Your cart is empty.</p>
+            </div>
+
+            <div id="cartSummary" class="bg-white rounded-lg shadow-md p-6 max-w-xl mx-auto mb-8 hidden">
+                <div class="flex justify-between items-center text-lg font-semibold border-b pb-3 mb-3">
+                    <span>Total Price:</span>
+                    <span id="cartTotalPrice" class="text-blue-600 text-2xl">₹0.00</span>
+                </div>
+
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Customer and Delivery Information</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label for="customerName" class="block text-gray-700 text-sm font-bold mb-2">Your Name:</label>
+                        <input type="text" id="customerName" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-blue-500" placeholder="Enter full name">
+                    </div>
+                    <div>
+                        <label for="customerPhone" class="block text-gray-700 text-sm font-bold mb-2">Your Phone Number:</label>
+                        <input type="tel" id="customerPhone" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-blue-500" placeholder="Enter phone number">
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Delivery Option:</label>
+                    <div class="flex gap-4">
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="deliveryType" value="Delivery" checked class="form-radio h-5 w-5 text-blue-600" id="deliveryOption">
+                            <span class="ml-2 text-gray-700">Delivery</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="deliveryType" value="Pickup" class="form-radio h-5 w-5 text-blue-600" id="pickupOption">
+                            <span class="ml-2 text-gray-700">Pickup</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="deliveryAddressSection" class="mb-6">
+                    <label for="deliveryAddress" class="block text-gray-700 text-sm font-bold mb-2">Delivery Address:</label>
+                    <textarea id="deliveryAddress" class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-blue-500" rows="3" placeholder="Enter your full address"></textarea>
+                </div>
+
+                <div class="mb-6">
+                    <label for="fileUpload" class="block text-gray-700 text-sm font-bold mb-2">Upload Design File (JPG, PNG, PDF):</label>
+                    <input type="file" id="fileUpload" accept=".jpg,.jpeg,.png,.pdf" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+                    <p id="fileNameDisplay" class="text-sm text-gray-600 mt-2"></p>
+                </div>
+
+                <button id="placeOrderBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg w-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105">
+                    Place Order
+                </button>
+            </div>
+        </section>
+
+        <!-- About Page -->
+        <section id="aboutPage" class="page p-8 text-center">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6 mt-4">About Us</h1>
+            <div class="bg-white rounded-lg shadow-md p-6 max-w-2xl mx-auto">
+                <p class="text-gray-700 mb-4 leading-relaxed">
+                    Our Print-On-Demand store is dedicated to providing high-quality personalized products. We offer a wide range of customizable items including frames, keychains, mugs, and cards. Our goal is to help our customers express their creativity and create unique, memorable products.
                 </p>
-                <ul class="list-disc list-inside space-y-2">
-                    <li><span class="font-bold">Email:</span> <a href="mailto:info@yourshop.com" class="text-blue-600 hover:underline">info@yourshop.com</a></li>
-                    <li><span class="font-bold">Phone:</span> +91 98765 43210</li>
-                    <li><span class="font-bold">Address:</span> 123, Custom Print Street, City, Country</li>
-                </ul>
-                <p class="mt-6 text-center text-gray-600">
-                    We will get back to you soon!
+                <p class="text-gray-700 leading-relaxed">
+                    We utilize the latest printing techniques and the finest materials to bring your designs to life. Whether it's a personalized frame to capture your favorite moments or a unique gift for friends and family, we ensure every product is crafted to perfection.
                 </p>
             </div>
         </section>
 
-        <!-- Cart Page Section -->
-        <section id="cart-page" class="page-section p-4 sm:p-8 max-w-4xl mx-auto bg-white rounded-lg shadow-xl my-5 sm:my-10">
-            <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-6 text-center">Your Cart</h2>
-            <div id="cart-content">
-                <!-- Cart items and checkout form will be rendered here by JavaScript -->
+        <!-- Contact Page -->
+        <section id="contactPage" class="page p-8 text-center">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6 mt-4">Contact Us</h1>
+            <div class="bg-white rounded-lg shadow-md p-6 max-w-xl mx-auto">
+                <p class="text-gray-700 mb-4">If you have any questions or need assistance, please feel free to reach out to us:</p>
+                <div class="text-left space-y-3">
+                    <p class="text-gray-800"><span class="font-semibold">Email:</span> example@email.com</p>
+                    <p class="text-gray-800"><span class="font-semibold">Phone:</span> +91 12345 67890</p>
+                    <p class="text-gray-800"><span class="font-semibold">Address:</span> 123, Main Road, New Delhi, India</p>
+                </div>
+                <p class="text-gray-700 mt-6">We will get back to you as soon as possible!</p>
             </div>
         </section>
+    </div>
 
-    </main>
-
-    <!-- Bottom Navigation Bar (New) -->
-    <footer id="bottom-nav">
-        <button id="nav-home-bottom" class="active-nav-btn" onclick="showPage('home')">
-            <svg fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-            <span>Home</span>
-        </button>
-        <button id="nav-about-bottom" onclick="showPage('about')">
-            <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm0-4.5c-.83 0-1.5-.67-1.5-1.5V7c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v3c0 .83-.67 1.5-1.5 1.5z"/></svg>
-            <span>About</span>
-        </button>
-        <button id="nav-contact-bottom" onclick="showPage('contact')">
-            <svg fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-            <span>Contact</span>
-        </button>
-        <button id="nav-cart-bottom" class="relative" onclick="showPage('cart')">
-            <svg fill="currentColor" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2S15.9 22 17 22s2-.9 2-2-.9-2-2-2zm-3.69-9.59L17 11.4l1.65-3.34c.2-.41-.05-.9-.48-.9H6.25l-.94-2H1v2h2l3.6-7.56c.2-.42.6-.64 1.05-.64h12.5c.67 0 1.05.74.68 1.3L19 12h-6.2l-2.42-5.18z"/></svg>
-            <span>Cart</span>
-            <span id="cart-item-count" class="absolute top-0 right-1 bg-red-500 text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center hidden">
-                0
-            </span>
-        </button>
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white p-4 text-center mt-auto">
+        <p>&copy; 2024 Print-On-Demand Store. All rights reserved.</p>
     </footer>
 
-    <script>
-        // --- Product Data ---
-        const productsData = [
-            {
-                id: 'P001',
-                name: 'Custom Frame 12x18',
-                category: 'Frame',
-                description: 'A beautiful and durable frame for your favorite memories.',
-                images: [
-                    'https://placehold.co/400x300/a78bfa/ffffff?text=Custom+Frame+1',
-                    'https://placehold.co/400x300/818cf8/ffffff?text=Custom+Frame+2',
-                ],
-                sizes: [
-                    { size: '12x18 Inch', price: 100 },
-                    { size: '18x12 Inch', price: 300 },
-                ],
-                frameTypes: ['Glass', 'Acrylic'],
-                frameColors: ['Black', 'White', 'Brown'],
-            },
-            {
-                id: 'P002',
-                name: 'Custom Keychain',
-                category: 'Keychain',
-                description: 'Personalized keychains for your keys.',
-                images: [
-                    'https://placehold.co/400x300/60a5fa/ffffff?text=Personalized+Keychain+1',
-                    'https://placehold.co/400x300/3b82f6/ffffff?text=Personalized+Keychain+2',
-                ],
-                sizes: [
-                    { size: 'Small', price: 50 },
-                    { size: 'Large', price: 80 },
-                ],
-            },
-            {
-                id: 'P003',
-                name: 'Personalized Mug',
-                category: 'Mug',
-                description: 'Customize your mug with your favorite photo or text.',
-                images: [
-                    'https://placehold.co/400x300/34d399/ffffff?text=Customized+Mug+1',
-                    'https://placehold.co/400x300/10b981/ffffff?text=Customized+Mug+2',
-                ],
-                sizes: [
-                    { size: 'Standard', price: 150 },
-                    { size: 'Large', price: 200 },
-                ],
-            },
-            {
-                id: 'P004',
-                name: 'Custom Greeting Card',
-                category: 'Card',
-                description: 'Personalized cards for any occasion.',
-                images: [
-                    'https://placehold.co/400x300/fcd34d/ffffff?text=Greeting+Card+1',
-                    'https://placehold.co/400x300/fbbf24/ffffff?text=Greeting+Card+2',
-                ],
-                sizes: [
-                    { size: 'A5', price: 80 },
-                    { size: 'A4', price: 120 },
-                ],
-            },
-            {
-                id: 'P005',
-                name: 'Wall Frame 18x12',
-                category: 'Frame',
-                description: 'Stunning frames for your home decor.',
-                images: [
-                    'https://placehold.co/400x300/c084fc/ffffff?text=Wall+Frame+1',
-                    'https://placehold.co/400x300/a78bfa/ffffff?text=Wall+Frame+2',
-                ],
-                sizes: [
-                    { size: '12x18 Inch', price: 100 },
-                    { size: '18x12 Inch', price: 300 },
-                ],
-                frameTypes: ['Glass', 'Acrylic'],
-                frameColors: ['Black', 'White', 'Brown'],
-            },
-            {
-                id: 'P006',
-                name: 'Photo Keychain',
-                category: 'Keychain',
-                description: 'Keychain with your favorite photo.',
-                images: [
-                    'https://placehold.co/400x300/93c5fd/ffffff?text=Photo+Keychain+1',
-                    'https://placehold.co/400x300/60a5fa/ffffff?text=Photo+Keychain+2',
-                ],
-                sizes: [
-                    { size: 'Small', price: 50 },
-                    { size: 'Large', price: 80 },
-                ],
-            },
-        ];
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t border-gray-200 z-50">
+        <ul class="flex justify-around items-center h-16">
+            <li>
+                <a href="#" class="nav-item flex flex-col items-center justify-center p-2 text-gray-600 hover:text-blue-600 transition duration-200 active" data-page="homePage">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001 1h3v-9m-8 0h8" />
+                    </svg>
+                    <span class="text-xs mt-1">Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="nav-item flex flex-col items-center justify-center p-2 text-gray-600 hover:text-blue-600 transition duration-200" data-page="aboutPage">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span class="text-xs mt-1">About Us</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="nav-item flex flex-col items-center justify-center p-2 text-gray-600 hover:text-blue-600 transition duration-200" data-page="contactPage">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                    <span class="text-xs mt-1">Contact Us</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="nav-item flex flex-col items-center justify-center p-2 text-gray-600 hover:text-blue-600 transition duration-200" data-page="cartPage">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <span class="text-xs mt-1">Cart (<span id="cartItemCount">0</span>)</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
 
-        // --- Global State Variables ---
-        let cartItems = [];
-        let currentActivePage = 'home';
-        let selectedCategory = 'All'; // Default filter category
-
-        // --- Shop Address (New) ---
-        const shopAddress = "123, Custom Print Street, City, Country"; // Your shop's actual address, previously defined in About Us section
-
-        // --- DOM Elements ---
-        const productListDiv = document.getElementById('product-list');
-        const categoryFiltersDiv = document.getElementById('category-filters');
-        const cartContentDiv = document.getElementById('cart-content');
-        const orderMessageDiv = document.getElementById('order-message');
-        const cartItemCountSpan = document.getElementById('cart-item-count');
-        const bottomNavButtons = document.querySelectorAll('#bottom-nav button');
-
-
-        // --- Helper Functions ---
-
-        /**
-         * Displays a temporary message notification.
-         * @param {string} message - The message to display.
-         * @param {string} typeClass - Tailwind background class (e.g., 'bg-green-500', 'bg-red-500').
-         */
-        function showOrderMessage(message, typeClass) {
-            orderMessageDiv.textContent = message;
-            orderMessageDiv.className = `fixed top-4 left-1/2 -translate-x-1/2 px-6 py-3 rounded-lg text-white font-semibold shadow-lg z-50 transition-opacity duration-300 ${typeClass} opacity-100`;
-            orderMessageDiv.style.display = 'block';
-
-            setTimeout(() => {
-                orderMessageDiv.classList.add('opacity-0');
-                orderMessageDiv.addEventListener('transitionend', function handler() {
-                    orderMessageDiv.style.display = 'none';
-                    orderMessageDiv.removeEventListener('transitionend', handler);
-                });
-            }, 5000);
-        }
-
-        /**
-         * Updates the cart item count displayed in the navigation bar.
-         */
-        function updateCartItemCount() {
-            if (cartItems.length > 0) {
-                cartItemCountSpan.textContent = cartItems.length;
-                cartItemCountSpan.classList.remove('hidden');
-                cartItemCountSpan.classList.add('top-0', 'right-1', 'h-4', 'w-4', 'text-xs');
-            } else {
-                cartItemCountSpan.classList.add('hidden');
-            }
-        }
-
-        /**
-         * Calculates the total price of items in the cart.
-         * @returns {number} The total price.
-         */
-        function calculateCartTotal() {
-            return cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
-        }
-
-        /**
-         * Shows a specific page section and hides others.
-         * Also updates the active navigation button styling.
-         * @param {string} pageId - The ID of the page section to show (e.g., 'home', 'about', 'cart').
-         */
-        function showPage(pageId) {
-            document.querySelectorAll('.page-section').forEach(section => {
-                section.classList.remove('active');
-            });
-            document.getElementById(`${pageId}-page`).classList.add('active');
-            currentActivePage = pageId;
-
-            // Update active state for bottom nav buttons
-            bottomNavButtons.forEach(button => {
-                button.classList.remove('active-nav-btn');
-                if (button.id === `nav-${pageId}-bottom`) {
-                    button.classList.add('active-nav-btn');
-                }
-            });
-
-            // If navigating to cart, render cart content
-            if (pageId === 'cart') {
-                renderCartContent();
-            }
-        }
-
-        /**
-         * Renders product cards based on the selected category filter.
-         */
-        function renderProducts() {
-            productListDiv.innerHTML = ''; // Clear existing products
-
-            const productsToDisplay = selectedCategory === 'All'
-                ? productsData
-                : productsData.filter(p => p.category === selectedCategory);
-
-            productsToDisplay.forEach((product, index) => {
-                const productCard = document.createElement('div');
-                productCard.className = 'product-card bg-white rounded-lg shadow-xl p-4 m-2 w-full sm:w-[48%] md:w-[31%] lg:w-[23%] xl:w-[18%] flex flex-col transform transition-all duration-300 hover:scale-105 hover:shadow-2xl font-inter fade-in';
-                productCard.style.animationDelay = `${index * 0.1}s`; // Stagger animation
-
-                // Store selected options for this card instance
-                productCard.dataset.selectedSize = product.sizes[0].size;
-                productCard.dataset.selectedPrice = product.sizes[0].price;
-                if (product.category === 'Frame') {
-                    productCard.dataset.selectedFrameType = product.frameTypes[0];
-                    productCard.dataset.selectedFrameColor = product.frameColors[0];
-                }
-                productCard.dataset.currentImageIndex = 0; // For image carousel
-
-                let sizeOptionsHtml = product.sizes.map(s => `
-                    <button class="option-button border border-gray-300 rounded-md px-3 py-1 text-sm ${s.size === product.sizes[0].size ? 'selected' : ''}" data-product-id="${product.id}" data-option-type="size" data-option-value="${s.size}" data-option-price="${s.price}">
-                        ${s.size} (₹${s.price})
-                    </button>
-                `).join('');
-
-                let frameTypeOptionsHtml = product.category === 'Frame' ? `
-                    <div class="mb-3">
-                        <label class="block text-gray-700 text-sm font-bold mb-1">Frame Type:</label>
-                        <div class="flex flex-wrap gap-2">
-                            ${product.frameTypes.map(type => `
-                                <button class="option-button border border-gray-300 rounded-md px-3 py-1 text-sm ${type === product.frameTypes[0] ? 'selected' : ''}" data-product-id="${product.id}" data-option-type="frameType" data-option-value="${type}">
-                                    ${type}
-                                </button>
-                            `).join('')}
-                        </div>
+    <!-- Product Detail Modal -->
+    <div id="productDetailModal" class="custom-modal-overlay">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-2xl transform transition-all sm:scale-100 opacity-100">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h2 id="modalProductName" class="text-2xl font-bold text-gray-800">Product Name</h2>
+                <button class="text-gray-500 hover:text-gray-800 text-3xl leading-none" onclick="closeModal('productDetailModal')">&times;</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Product Image Gallery -->
+                <div>
+                    <img id="modalProductImage" src="https://placehold.co/400x300/e0e0e0/000000?text=Product+Image" alt="Product Image" class="w-full h-48 object-cover rounded-lg shadow-md mb-4 object-cover">
+                    <div id="modalImageGallery" class="flex overflow-x-auto space-x-2 product-gallery-scroll pb-2">
+                        <!-- Images will be loaded here -->
                     </div>
-                ` : '';
-
-                let frameColorOptionsHtml = product.category === 'Frame' ? `
-                    <div class="mb-3">
-                        <label class="block text-gray-700 text-sm font-bold mb-1">Frame Color:</label>
-                        <div class="flex flex-wrap gap-2">
-                            ${product.frameColors.map(color => `
-                                <button class="option-button border border-gray-300 rounded-md px-3 py-1 text-sm ${color === product.frameColors[0] ? 'selected' : ''}" data-product-id="${product.id}" data-option-type="frameColor" data-option-value="${color}">
-                                    ${color}
-                                </button>
-                            `).join('')}
-                        </div>
-                    </div>
-                ` : '';
-
-                productCard.innerHTML = `
-                    <div class="relative h-48 w-full mb-3 overflow-hidden rounded-md">
-                        <img id="product-image-${product.id}" src="${product.images[0]}" alt="${product.name}" class="w-full h-full object-cover rounded-md"
-                            onerror="this.onerror=null; this.src='https://placehold.co/400x300/cccccc/000000?text=Image+Not+Found';"
-                        >
-                        ${product.images.length > 1 ? `
-                            <button class="absolute left-1 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white p-1 rounded-full hover:bg-opacity-75 focus:outline-none focus:ring-2 focus:ring-blue-500" data-product-id="${product.id}" data-action="prev-image" aria-label="Previous image">
-                                &#10094;
-                            </button>
-                            <button class="absolute right-1 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white p-1 rounded-full hover:bg-opacity-75 focus:outline-none focus:ring-2 focus:ring-blue-500" data-product-id="${product.id}" data-action="next-image" aria-label="Next image">
-                                &#10095;
-                            </button>
-                        ` : ''}
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-1">${product.name}</h3>
-                    <p class="text-xs text-gray-600 mb-2">Category: ${product.category}</p>
-                    <p class="text-gray-700 text-sm mb-3 flex-grow">${product.description}</p>
-
-                    <div class="mb-3">
-                        <label class="block text-gray-700 text-sm font-bold mb-1">Select Size:</label>
-                        <div class="flex flex-wrap gap-2">
-                            ${sizeOptionsHtml}
-                        </div>
+                </div>
+                <!-- Product Details and Options -->
+                <div>
+                    <p id="modalProductDescription" class="text-gray-700 mb-4 text-base"></p>
+                    <div class="mb-4">
+                        <label for="modalProductSize" class="block text-gray-700 text-sm font-bold mb-2">Size:</label>
+                        <select id="modalProductSize" class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-blue-500">
+                            <!-- Options will be loaded here -->
+                        </select>
                     </div>
 
-                    ${frameTypeOptionsHtml}
-                    ${frameColorOptionsHtml}
+                    <div id="frameTypeOption" class="mb-4 hidden">
+                        <label for="modalFrameType" class="block text-gray-700 text-sm font-bold mb-2">Frame Type:</label>
+                        <select id="modalFrameType" class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-blue-500">
+                            <!-- Options will be loaded here -->
+                        </select>
+                    </div>
 
-                    <p id="price-${product.id}" class="text-lg font-bold text-blue-600 mb-3">Price: ₹${product.sizes[0].price}</p>
-                    <button class="add-to-cart-btn py-2 px-4 rounded-lg text-base font-semibold transition-colors duration-300 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 bg-blue-600 text-white hover:bg-blue-700" data-product-id="${product.id}">
+                    <div id="frameColorOption" class="mb-4 hidden">
+                        <label for="modalFrameColor" class="block text-gray-700 text-sm font-bold mb-2">Frame Color:</label>
+                        <select id="modalFrameColor" class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-blue-500">
+                            <!-- Options will be loaded here -->
+                        </select>
+                    </div>
+
+                    <p class="text-xl font-bold text-gray-800 mb-4">Price: <span id="modalProductPrice" class="text-blue-600">₹0.00</span></p>
+                    <button id="addToCartModalBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg w-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105">
                         Add to Cart
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="flex flex-col items-center">
+            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500 mb-4"></div>
+            <p class="text-white text-lg font-semibold">Please wait...</p>
+        </div>
+    </div>
+
+    <!-- Custom Notification Modal -->
+    <div id="notificationModal" class="custom-modal-overlay">
+        <div class="custom-modal-content">
+            <span class="custom-modal-close" onclick="closeModal('notificationModal')">&times;</span>
+            <h3 id="notificationTitle" class="text-xl font-bold mb-3 text-gray-800"></h3>
+            <p id="notificationMessage" class="text-gray-700 mb-5"></p>
+            <button class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg" onclick="closeModal('notificationModal')">OK</button>
+        </div>
+    </div>
+
+    <script>
+        // Google Apps Script Web App URL
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzM0aoBmkJvs10YfxFjqjZ43mO9u_z3JvjGMtVNJ3h2BrBBlrn8hQPaQC-49OE0jmI/exec';
+
+        // Set your store logo URL here
+        const STORE_LOGO_URL = 'https://placehold.co/40x40/ffffff/000000?text=LOGO'; // Example: 'https://yourdomain.com/your-logo.png'
+
+        // Sample Product Data (More products can be added here)
+        // Note: Image URLs are placeholders and should ideally be hosted or base64 encoded for production
+        const products = [
+            {
+                id: 'frame-1',
+                name: 'Personalized Photo Frame',
+                description: 'Cherish your favorite moments in a high-quality photo frame. Available in various sizes, types, and colors.',
+                category: 'Frame',
+                images: [
+                    'https://placehold.co/600x400/a0c4ff/000000?text=Frame+Image+1',
+                    'https://placehold.co/600x400/bdb2ff/000000?text=Frame+Image+2',
+                    'https://placehold.co/600x400/ffc6ff/000000?text=Frame+Image+3'
+                ],
+                options: {
+                    sizes: [
+                        { size: 'Small (6x8 inches)', price: 499 },
+                        { size: 'Medium (8x10 inches)', price: 799 },
+                        { size: 'Large (10x12 inches)', price: 999 }
+                    ],
+                    frameTypes: ['Glass', 'Acrylic'],
+                    frameColors: ['Black', 'White', 'Brown']
+                },
+                selectedSize: 'Small (6x8 inches)', // Default selected
+                selectedFrameType: 'Glass', // Default selected
+                selectedFrameColor: 'Black' // Default selected
+            },
+            {
+                id: 'keychain-1',
+                name: 'Custom Photo Keychain',
+                description: 'Create a unique keychain with your favorite photo. Durable and attractive.',
+                category: 'Keychain',
+                images: [
+                    'https://placehold.co/600x400/ffadad/000000?text=Keychain+Image+1',
+                    'https://placehold.co/600x400/ffd6a5/000000?text=Keychain+Image+2'
+                ],
+                options: {
+                    sizes: [{ size: 'Standard (2x2 inches)', price: 149 }],
+                    frameTypes: [], // Not applicable for keychains
+                    frameColors: [] // Not applicable for keychains
+                },
+                selectedSize: 'Standard (2x2 inches)'
+            },
+            {
+                id: 'mug-1',
+                name: 'Magic Mug',
+                description: 'A mug with a special coating that reveals your picture when a hot beverage is poured.',
+                category: 'Mug',
+                images: [
+                    'https://placehold.co/600x400/fdffb6/000000?text=Mug+Image+1',
+                    'https://placehold.co/600x400/caffbf/000000?text=Mug+Image+2'
+                ],
+                options: {
+                    sizes: [{ size: 'Standard (11oz)', price: 349 }],
+                    frameTypes: [],
+                    frameColors: []
+                },
+                selectedSize: 'Standard (11oz)'
+            },
+            {
+                id: 'card-1',
+                name: 'Personalized Greeting Card',
+                description: 'A greeting card with a custom message and picture for any occasion.',
+                category: 'Card',
+                images: [
+                    'https://placehold.co/600x400/9bf6ff/000000?text=Card+Image+1',
+                    'https://placehold.co/600x400/a0c4ff/000000?text=Card+Image+2'
+                ],
+                options: {
+                    sizes: [{ size: 'A5', price: 99 }],
+                    frameTypes: [],
+                    frameColors: []
+                },
+                selectedSize: 'A5'
+            },
+            {
+                id: 'frame-2',
+                name: 'Crystal Photo Frame',
+                description: 'A beautiful and elegant crystal photo frame for your home.',
+                category: 'Frame',
+                images: [
+                    'https://placehold.co/600x400/ffadad/000000?text=Crystal+Frame+1',
+                    'https://placehold.co/600x400/ffd6a5/000000?text=Crystal+Frame+2'
+                ],
+                options: {
+                    sizes: [
+                        { size: 'Small (5x7 inches)', price: 599 },
+                        { size: 'Medium (7x9 inches)', price: 899 }
+                    ],
+                    frameTypes: ['Glass'],
+                    frameColors: ['Transparent']
+                },
+                selectedSize: 'Small (5x7 inches)',
+                selectedFrameType: 'Glass',
+                selectedFrameColor: 'Transparent'
+            }
+        ];
+
+        let cart = JSON.parse(localStorage.getItem('cart')) || []; // Load cart from localStorage
+        let currentSelectedProduct = null; // Stores the product currently viewed in modal
+        let uploadedFileData = null;
+        let uploadedFileName = '';
+        let uploadedFileType = '';
+
+        // --- Utility Functions ---
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageId).classList.add('active');
+
+            // Update active state in nav bar
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`.nav-item[data-page="${pageId}"]`).classList.add('active');
+
+            // If navigating to cart page, render it
+            if (pageId === 'cartPage') {
+                renderCart();
+            }
+        }
+
+        function showLoading(isLoading) {
+            document.getElementById('loadingOverlay').classList.toggle('hidden', !isLoading);
+        }
+
+        /**
+         * Displays a custom notification modal.
+         * @param {string} title - The title of the notification.
+         * @param {string} message - The message content.
+         * @param {'success'|'error'|'info'} type - The type of notification to apply styling.
+         */
+        function showNotification(title, message, type = 'info') {
+            const modal = document.getElementById('notificationModal');
+            document.getElementById('notificationTitle').textContent = title;
+            document.getElementById('notificationMessage').textContent = message;
+
+            // Apply color styling based on type (success, error, info)
+            const titleElement = document.getElementById('notificationTitle');
+            titleElement.classList.remove('text-green-600', 'text-red-600', 'text-blue-600');
+            if (type === 'success') {
+                titleElement.classList.add('text-green-600');
+            } else if (type === 'error') {
+                titleElement.classList.add('text-red-600');
+            } else {
+                titleElement.classList.add('text-blue-600');
+            }
+            openModal('notificationModal');
+        }
+
+        /**
+         * Opens a modal by removing 'hidden' class and setting display to flex.
+         * @param {string} modalId - The ID of the modal to open.
+         */
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('hidden'); // Remove Tailwind's hidden class
+            // Explicitly set display to flex for proper centering with justify-content/align-items
+            modal.style.display = 'flex';
+        }
+
+        /**
+         * Closes a modal by adding 'hidden' class and resetting display to none.
+         * @param {string} modalId - The ID of the modal to close.
+         */
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.add('hidden'); // Add Tailwind's hidden class
+            // Explicitly set display back to none
+            modal.style.display = 'none';
+        }
+
+        function updateCartItemCount() {
+            const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+            document.getElementById('cartItemCount').textContent = count;
+        }
+
+        // --- Product Rendering ---
+        /**
+         * Renders products on the home page, optionally filtered by category.
+         * @param {string} filterCategory - The category to filter products by, 'All' for no filter.
+         */
+        function renderProducts(filterCategory = 'All') {
+            const productGrid = document.getElementById('productGrid');
+            productGrid.innerHTML = ''; // Clear existing products
+
+            const filteredProducts = filterCategory === 'All'
+                ? products
+                : products.filter(p => p.category === filterCategory);
+
+            filteredProducts.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.className = 'bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden';
+                productCard.innerHTML = `
+                    <img src="${product.images[0]}" alt="${product.name}" class="w-full h-48 object-cover rounded-t-lg">
+                    <div class="p-5">
+                        <h3 class="font-bold text-xl text-gray-800 mb-2">${product.name}</h3>
+                        <p class="text-gray-600 text-sm mb-4 line-clamp-3">${product.description}</p>
+                        <p class="font-semibold text-lg text-blue-600 mb-4">₹${product.options.sizes[0].price.toFixed(2)}</p>
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <button class="view-details-btn bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out w-full sm:w-1/2" data-product-id="${product.id}">
+                                View Details
+                            </button>
+                            <button class="add-to-cart-btn bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out w-full sm:w-1/2" data-product-id="${product.id}">
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>
                 `;
-                productListDiv.appendChild(productCard);
+                productGrid.appendChild(productCard);
             });
 
-            addEventListenersToProductCards();
+            attachProductEventListeners();
         }
 
         /**
-         * Dynamically generates category filter buttons.
+         * Attaches event listeners to product card buttons (View Details, Add to Cart).
          */
-        function renderCategoryFilters() {
-            categoryFiltersDiv.innerHTML = '';
-            const categories = ['All', 'Frame', 'Keychain', 'Mug', 'Card'];
-
-            categories.forEach(category => {
-                const button = document.createElement('button');
-                button.textContent = category;
-                button.className = `px-4 py-2 sm:px-6 sm:py-3 rounded-lg text-base sm:text-lg font-semibold transition-colors duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 ${selectedCategory === category ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`;
-                button.onclick = () => {
-                    selectedCategory = category;
-                    renderCategoryFilters();
-                    renderProducts();
+        function attachProductEventListeners() {
+            document.querySelectorAll('.view-details-btn').forEach(button => {
+                button.onclick = (event) => {
+                    const productId = event.target.dataset.productId;
+                    openProductDetailModal(productId);
                 };
-                categoryFiltersDiv.appendChild(button);
+            });
+
+            document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+                button.onclick = (event) => {
+                    const productId = event.target.dataset.productId;
+                    const product = products.find(p => p.id === productId);
+                    if (product) {
+                        // Use default selected options for direct add to cart
+                        addToCart({
+                            id: product.id,
+                            name: product.name,
+                            price: product.options.sizes.find(s => s.size === product.selectedSize).price,
+                            quantity: 1,
+                            image: product.images[0],
+                            size: product.selectedSize,
+                            category: product.category, // Added category for Apps Script logic
+                            frameType: product.category === 'Frame' ? product.selectedFrameType : undefined,
+                            frameColor: product.category === 'Frame' ? product.selectedFrameColor : undefined
+                        });
+                        showNotification('Success!', `${product.name} added to cart.`, 'success');
+                    }
+                };
             });
         }
 
         /**
-         * Attaches event listeners to dynamically created product card elements.
-         * This uses event delegation for some elements.
+         * Opens the product detail modal and populates it with product information.
+         * @param {string} productId - The ID of the product to display.
          */
-        function addEventListenersToProductCards() {
-            productListDiv.addEventListener('click', (event) => {
-                const target = event.target;
-                const productId = target.dataset.productId;
-                const productCardElement = target.closest('.product-card');
+        function openProductDetailModal(productId) {
+            currentSelectedProduct = products.find(p => p.id === productId);
+            if (!currentSelectedProduct) return;
 
-                if (!productCardElement) return;
+            document.getElementById('modalProductName').textContent = currentSelectedProduct.name;
+            document.getElementById('modalProductDescription').textContent = currentSelectedProduct.description;
 
-                const product = productsData.find(p => p.id === productId);
-                if (!product) return;
-
-                // Handle image navigation
-                if (target.dataset.action === 'next-image' || target.dataset.action === 'prev-image') {
-                    let currentImageIndex = parseInt(productCardElement.dataset.currentImageIndex || '0');
-                    const productImageElement = productCardElement.querySelector(`#product-image-${productId}`);
-
-                    if (target.dataset.action === 'next-image') {
-                        currentImageIndex = (currentImageIndex + 1) % product.images.length;
-                    } else if (target.dataset.action === 'prev-image') {
-                        currentImageIndex = (currentImageIndex - 1 + product.images.length) % product.images.length;
-                    }
-                    productCardElement.dataset.currentImageIndex = currentImageIndex;
-                    productImageElement.src = product.images[currentImageIndex];
-                }
-
-                // Handle option button clicks (size, frameType, frameColor)
-                if (target.classList.contains('option-button')) {
-                    const optionType = target.dataset.optionType;
-                    const optionValue = target.dataset.optionValue;
-                    const currentPriceElement = productCardElement.querySelector(`#price-${productId}`);
-
-                    productCardElement.querySelectorAll(`.option-button[data-option-type="${optionType}"]`).forEach(btn => {
-                        btn.classList.remove('selected');
-                    });
-                    target.classList.add('selected');
-
-                    if (optionType === 'size') {
-                        productCardElement.dataset.selectedSize = optionValue;
-                        productCardElement.dataset.selectedPrice = target.dataset.optionPrice;
-                        currentPriceElement.textContent = `Price: ₹${target.dataset.optionPrice}`;
-                    } else if (optionType === 'frameType') {
-                        productCardElement.dataset.selectedFrameType = optionValue;
-                    } else if (optionType === 'frameColor') {
-                        productCardElement.dataset.selectedFrameColor = optionValue;
-                    }
-                }
-
-                // Handle Add to Cart button click
-                if (target.classList.contains('add-to-cart-btn')) {
-                    const selectedSizeName = productCardElement.dataset.selectedSize;
-                    const selectedPrice = parseFloat(productCardElement.dataset.selectedPrice);
-
-                    const itemToAdd = {
-                        productId: product.id,
-                        name: product.name,
-                        category: product.category,
-                        selectedSize: { size: selectedSizeName, price: selectedPrice },
-                        price: selectedPrice,
-                        quantity: 1,
-                    };
-
-                    if (product.category === 'Frame') {
-                        itemToAdd.selectedFrameType = productCardElement.dataset.selectedFrameType;
-                        itemToAdd.selectedFrameColor = productCardElement.dataset.selectedFrameColor;
-                    }
-
-                    addToCart(itemToAdd);
-                    showOrderMessage('Product added to cart!', 'bg-green-500');
-                }
+            // Product Image Gallery
+            const mainImage = document.getElementById('modalProductImage');
+            mainImage.src = currentSelectedProduct.images[0];
+            const galleryDiv = document.getElementById('modalImageGallery');
+            galleryDiv.innerHTML = '';
+            currentSelectedProduct.images.forEach(imgSrc => {
+                const imgThumb = document.createElement('img');
+                imgThumb.src = imgSrc;
+                imgThumb.className = 'w-20 h-20 object-cover rounded-md cursor-pointer hover:border-2 hover:border-blue-500 transition-all duration-200';
+                imgThumb.onclick = () => mainImage.src = imgSrc;
+                galleryDiv.appendChild(imgThumb);
             });
+
+            // Populate Size options
+            const sizeSelect = document.getElementById('modalProductSize');
+            sizeSelect.innerHTML = '';
+            currentSelectedProduct.options.sizes.forEach(sizeOption => {
+                const option = document.createElement('option');
+                option.value = sizeOption.size;
+                option.textContent = `${sizeOption.size} - ₹${sizeOption.price.toFixed(2)}`;
+                sizeSelect.appendChild(option);
+            });
+            sizeSelect.value = currentSelectedProduct.selectedSize; // Set default selection
+
+            // Populate Frame Type options (if applicable)
+            const frameTypeDiv = document.getElementById('frameTypeOption');
+            const frameTypeSelect = document.getElementById('modalFrameType');
+            if (currentSelectedProduct.category === 'Frame' && currentSelectedProduct.options.frameTypes.length > 0) {
+                frameTypeDiv.classList.remove('hidden');
+                frameTypeSelect.innerHTML = '';
+                currentSelectedProduct.options.frameTypes.forEach(type => {
+                    const option = document.createElement('option');
+                    option.value = type;
+                    option.textContent = type;
+                    frameTypeSelect.appendChild(option);
+                });
+                frameTypeSelect.value = currentSelectedProduct.selectedFrameType;
+            } else {
+                frameTypeDiv.classList.add('hidden');
+            }
+
+            // Populate Frame Color options (if applicable)
+            const frameColorDiv = document.getElementById('frameColorOption');
+            const frameColorSelect = document.getElementById('modalFrameColor');
+            if (currentSelectedProduct.category === 'Frame' && currentSelectedProduct.options.frameColors.length > 0) {
+                frameColorDiv.classList.remove('hidden');
+                frameColorSelect.innerHTML = '';
+                currentSelectedProduct.options.frameColors.forEach(color => {
+                    const option = document.createElement('option');
+                    option.value = color;
+                    option.textContent = color;
+                    frameColorSelect.appendChild(option);
+                });
+                frameColorSelect.value = currentSelectedProduct.selectedFrameColor;
+            } else {
+                frameColorDiv.classList.add('hidden');
+            }
+
+            // Update price based on current selections
+            updateModalProductPrice();
+
+            // Add event listeners for options to update price
+            sizeSelect.onchange = (event) => {
+                currentSelectedProduct.selectedSize = event.target.value;
+                updateModalProductPrice();
+            };
+            frameTypeSelect.onchange = (event) => {
+                currentSelectedProduct.selectedFrameType = event.target.value;
+            };
+            frameColorSelect.onchange = (event) => {
+                currentSelectedProduct.selectedFrameColor = event.target.value;
+            };
+
+            openModal('productDetailModal');
         }
 
+        /**
+         * Updates the price displayed in the product detail modal based on selected size.
+         */
+        function updateModalProductPrice() {
+            const selectedSizeOption = currentSelectedProduct.options.sizes.find(
+                s => s.size === document.getElementById('modalProductSize').value
+            );
+            document.getElementById('modalProductPrice').textContent = `₹${selectedSizeOption.price.toFixed(2)}`;
+        }
 
-        function addToCart(itemToAdd) {
-            const existingItemIndex = cartItems.findIndex(item =>
-                item.productId === itemToAdd.productId &&
-                item.selectedSize.size === itemToAdd.selectedSize.size &&
-                (item.selectedFrameType === itemToAdd.selectedFrameType || !item.selectedFrameType) &&
-                (item.selectedFrameColor === itemToAdd.selectedFrameColor || !item.selectedFrameColor)
+        // --- Cart Management ---
+        /**
+         * Adds an item to the shopping cart or updates its quantity if already present.
+         * @param {object} item - The product item to add.
+         */
+        function addToCart(item) {
+            const existingItemIndex = cart.findIndex(
+                cartItem => cartItem.id === item.id &&
+                            cartItem.size === item.size &&
+                            cartItem.frameType === item.frameType &&
+                            cartItem.frameColor === item.frameColor
             );
 
             if (existingItemIndex > -1) {
-                cartItems[existingItemIndex].quantity += 1;
+                cart[existingItemIndex].quantity += item.quantity;
             } else {
-                cartItems.push({ ...itemToAdd, uniqueCartId: Date.now() + Math.random() });
+                cart.push(item);
             }
+            saveCart();
             updateCartItemCount();
-            renderCartContent(); // Call renderCartContent to immediately update the cart display
-            updatePlaceOrderButtonState();
-        }
-
-
-        function removeFromCart(indexToRemove) {
-            cartItems.splice(indexToRemove, 1);
-            updateCartItemCount();
-            renderCartContent();
-            updatePlaceOrderButtonState();
-        }
-
-
-        function clearCart() {
-            cartItems = [];
-            updateCartItemCount();
-            renderCartContent();
-            updatePlaceOrderButtonState();
         }
 
         /**
-         * Renders the content of the shopping cart page.
+         * Removes an item from the cart at a specific index.
+         * @param {number} index - The index of the item to remove.
          */
-        function renderCartContent() {
-            cartContentDiv.innerHTML = '';
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            saveCart();
+            renderCart(); // Re-render cart after removal
+            updateCartItemCount();
+        }
 
-            if (cartItems.length === 0) {
-                cartContentDiv.innerHTML = '<p class="text-center text-gray-600 text-lg">Your cart is empty.</p>';
+        /**
+         * Updates the quantity of an item in the cart. Removes if quantity is 0 or less.
+         * @param {number} index - The index of the item to update.
+         * @param {number} newQuantity - The new quantity for the item.
+         */
+        function updateCartQuantity(index, newQuantity) {
+            if (newQuantity <= 0) {
+                removeFromCart(index);
+            } else {
+                cart[index].quantity = newQuantity;
+                saveCart();
+                renderCart(); // Re-render cart to update totals
+            }
+        }
+
+        /**
+         * Saves the current cart state to local storage.
+         */
+        function saveCart() {
+            localStorage.setItem('cart', JSON.stringify(cart));
+        }
+
+        /**
+         * Renders all items in the shopping cart on the cart page.
+         */
+        function renderCart() {
+            const cartItemsContainer = document.getElementById('cartItems');
+            const emptyCartMessage = document.getElementById('emptyCartMessage');
+            const cartSummary = document.getElementById('cartSummary');
+            let totalPrice = 0;
+
+            cartItemsContainer.innerHTML = ''; // Clear existing cart items
+
+            if (cart.length === 0) {
+                emptyCartMessage.classList.remove('hidden');
+                cartSummary.classList.add('hidden');
                 return;
+            } else {
+                emptyCartMessage.classList.add('hidden');
+                cartSummary.classList.remove('hidden');
             }
 
-            let cartHtml = `
-                <!-- Customer Information Section -->
-                <div class="mb-6 p-4 border rounded-lg bg-gray-50">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Your Information</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <label for="customerName" class="block text-gray-700 text-sm font-bold mb-2">Your Name:</label>
-                            <input type="text" id="customerName" class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Full Name" required>
-                        </div>
-                        <div>
-                            <label for="customerPhone" class="block text-gray-700 text-sm font-bold mb-2">Phone Number:</label>
-                            <input type="tel" id="customerPhone" class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Your Phone Number" required>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="customerAddress" class="block text-gray-700 text-sm font-bold mb-2">Your Address:</label> <!-- Changed label text -->
-                        <textarea id="customerAddress" rows="3" class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Your Full Address"></textarea>
-                    </div>
-                </div>
+            cart.forEach((item, index) => {
+                const itemTotalPrice = item.price * item.quantity;
+                totalPrice += itemTotalPrice;
 
-                <!-- Cart Items List -->
-                <div class="space-y-4 mb-6">
-            `;
-            cartItems.forEach((item, index) => {
-                cartHtml += `
-                    <div class="flex flex-col sm:flex-row items-center justify-between p-4 bg-gray-50 rounded-lg shadow-sm">
-                        <div class="mb-2 sm:mb-0 sm:text-left text-center w-full sm:w-auto">
-                            <h3 class="text-lg font-semibold text-gray-800">${item.name}</h3>
-                            <p class="text-sm text-gray-600">Size: ${item.selectedSize.size}</p>
-                            ${item.category === 'Frame' ? `
-                                <p class="text-sm text-gray-600">Frame Type: ${item.selectedFrameType || 'N/A'}, Color: ${item.selectedFrameColor || 'N/A'}</p>
-                            ` : ''}
-                            <p class="text-md font-bold text-blue-600">₹${item.price} x ${item.quantity}</p>
-                        </div>
-                        <button class="remove-from-cart-btn bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-400" data-cart-index="${index}" aria-label="Remove from cart">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 11-2 0v6a1 1 0 112 0V8z" clip-rule="evenodd" />
-                            </svg>
-                        </button>
+                const cartItemDiv = document.createElement('div');
+                cartItemDiv.className = 'bg-white rounded-lg shadow-md p-4 flex flex-col sm:flex-row items-center justify-between gap-4';
+                cartItemDiv.innerHTML = `
+                    <img src="${item.image}" alt="${item.name}" class="w-24 h-24 object-cover rounded-lg">
+                    <div class="flex-grow text-center sm:text-left">
+                        <h4 class="font-bold text-lg text-gray-800">${item.name}</h4>
+                        <p class="text-gray-600 text-sm">${item.size ? `Size: ${item.size}` : ''} ${item.frameType ? `, Type: ${item.frameType}` : ''} ${item.frameColor ? `, Color: ${item.frameColor}` : ''}</p>
+                        <p class="text-gray-700">₹${item.price.toFixed(2)} per item</p>
                     </div>
+                    <div class="flex items-center gap-2">
+                        <button class="qty-decrease-btn bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-lg font-bold hover:bg-gray-300" data-index="${index}">-</button>
+                        <span class="text-lg font-semibold">${item.quantity}</span>
+                        <button class="qty-increase-btn bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-lg font-bold hover:bg-gray-300" data-index="${index}">+</button>
+                    </div>
+                    <p class="font-bold text-lg text-blue-600">₹${itemTotalPrice.toFixed(2)}</p>
+                    <button class="remove-from-cart-btn bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out" data-index="${index}">
+                        Remove
+                    </button>
                 `;
+                cartItemsContainer.appendChild(cartItemDiv);
             });
-            cartHtml += `</div>`; // Close cart items list
 
-            cartHtml += `
-                <div class="text-right text-xl sm:text-2xl font-bold text-gray-900 mb-6">
-                    Total: ₹<span id="cart-total">${calculateCartTotal()}</span>
-                </div>
-
-                <!-- Order File Upload Section (New) -->
-                <div class="mb-6 p-4 border rounded-lg bg-gray-50">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Upload File for Order</h3>
-                    <p class="text-sm text-gray-600 mb-2">Please upload *one* file (JPG, PNG, PDF) for your entire order. This file will be stored in our Google Drive.</p>
-                    <input type="file" id="order-file-upload" accept=".jpg, .jpeg, .png, .pdf" class="block w-full text-gray-700 border border-gray-300 rounded-md py-1 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    <p id="order-file-status" class="text-xs text-red-500 mt-1">No file selected.</p>
-                </div>
-
-                <!-- Delivery Options -->
-                <div class="mb-6 p-4 border rounded-lg bg-gray-50">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Delivery Options</h3>
-                    <div class="flex flex-col sm:flex-row gap-4 mb-4">
-                        <div class="flex items-center">
-                            <input type="radio" id="delivery-option" name="deliveryOption" value="delivery" checked class="mr-2 h-5 w-5 text-blue-600 focus:ring-blue-500">
-                            <label for="delivery-option" class="text-lg text-gray-700">Delivery</label>
-                        </div>
-                        <div class="flex items-center">
-                            <input type="radio" id="pickup-option" name="deliveryOption" value="pickup" class="mr-2 h-5 w-5 text-blue-600 focus:ring-blue-500">
-                            <label for="pickup-option" class="text-lg text-gray-700">Pickup</label>
-                        </div>
-                    </div>
-                    <div id="delivery-address-container" class="mt-4">
-                        <label for="deliveryAddress" class="block text-gray-700 text-sm font-bold mb-2">Full Delivery Address:</label>
-                        <textarea id="deliveryAddress" rows="4" class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter your full delivery address here..."></textarea>
-                    </div>
-                </div>
-
-                <!-- Place Order Button -->
-                <button id="place-order-btn" class="w-full bg-green-600 text-white py-3 px-6 rounded-lg text-xl font-semibold hover:bg-green-700 transition-colors duration-300 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75">
-                    Place Order
-                </button>
-            `;
-            cartContentDiv.innerHTML = cartHtml;
-
-            // Re-get references to elements after they are rendered
-            // This is crucial because renderCartContent rebuilds the HTML
-            // and previous references might become null.
-            const customerAddressTextareaLocal = document.getElementById('customerAddress');
-            const deliveryAddressContainerLocal = document.getElementById('delivery-address-container');
-            const deliveryOptionRadioLocal = document.getElementById('delivery-option');
-            const pickupOptionRadioLocal = document.getElementById('pickup-option');
-
-            // Apply initial state based on default selected radio (delivery)
-            if (deliveryOptionRadioLocal && deliveryOptionRadioLocal.checked) {
-                customerAddressTextareaLocal.value = '';
-                customerAddressTextareaLocal.readOnly = false;
-                customerAddressTextareaLocal.classList.remove('read-only');
-                deliveryAddressContainerLocal.style.display = 'block';
-            } else if (pickupOptionRadioLocal && pickupOptionRadioLocal.checked) {
-                customerAddressTextareaLocal.value = shopAddress;
-                customerAddressTextareaLocal.readOnly = true;
-                customerAddressTextareaLocal.classList.add('read-only');
-                deliveryAddressContainerLocal.style.display = 'none';
-            }
-
+            document.getElementById('cartTotalPrice').textContent = `₹${totalPrice.toFixed(2)}`;
 
             attachCartEventListeners();
         }
 
-
+        /**
+         * Attaches event listeners to cart item quantity and remove buttons.
+         */
         function attachCartEventListeners() {
-            // Re-get references to radio buttons and address fields here because renderCartContent rebuilds them.
-            const deliveryOptionRadios = document.querySelectorAll('input[name="deliveryOption"]');
-            const customerAddressTextareaRef = document.getElementById('customerAddress');
-            const deliveryAddressContainerRef = document.getElementById('delivery-address-container');
-
-
-            deliveryOptionRadios.forEach(radio => {
-                radio.onchange = (event) => {
-                    if (event.target.value === 'delivery') {
-                        deliveryAddressContainerRef.style.display = 'block';
-                        customerAddressTextareaRef.value = ''; // Clear pickup address
-                        customerAddressTextareaRef.readOnly = false;
-                        customerAddressTextareaRef.classList.remove('read-only'); // Remove read-only styling
-                    } else { // 'pickup'
-                        deliveryAddressContainerRef.style.display = 'none';
-                        customerAddressTextareaRef.value = shopAddress; // Set shop address
-                        customerAddressTextareaRef.readOnly = true;
-                        customerAddressTextareaRef.classList.add('read-only'); // Add read-only styling
-                    }
+            document.querySelectorAll('.qty-decrease-btn').forEach(button => {
+                button.onclick = (event) => {
+                    const index = parseInt(event.target.dataset.index);
+                    updateCartQuantity(index, cart[index].quantity - 1);
                 };
             });
-
+            document.querySelectorAll('.qty-increase-btn').forEach(button => {
+                button.onclick = (event) => {
+                    const index = parseInt(event.target.dataset.index);
+                    updateCartQuantity(index, cart[index].quantity + 1);
+                };
+            });
             document.querySelectorAll('.remove-from-cart-btn').forEach(button => {
                 button.onclick = (event) => {
-                    const index = parseInt(event.currentTarget.dataset.cartIndex);
+                    const index = parseInt(event.target.dataset.index);
                     removeFromCart(index);
                 };
             });
+        }
 
-            const orderFileUploadInput = document.getElementById('order-file-upload');
-            const orderFileStatusP = document.getElementById('order-file-status');
-            const placeOrderBtn = document.getElementById('place-order-btn');
+        // --- Event Listeners ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set the logo URL when the DOM content is loaded
+            document.getElementById('storeLogo').src = STORE_LOGO_URL;
 
-            orderFileUploadInput.onchange = (event) => {
-                const file = event.target.files[0];
-                if (file && (file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'application/pdf')) {
-                    orderFileStatusP.textContent = `Selected file: ${file.name}`;
-                    orderFileStatusP.classList.remove('text-red-500');
-                    orderFileStatusP.classList.add('text-gray-500');
-                    updatePlaceOrderButtonState();
-                } else {
-                    orderFileStatusP.textContent = 'Only JPG, PNG and PDF files are accepted for order.';
-                    orderFileStatusP.classList.add('text-red-500');
-                    orderFileStatusP.classList.remove('text-gray-500');
-                    updatePlaceOrderButtonState();
-                    showOrderMessage('Only JPG, PNG and PDF files are accepted for order.', 'bg-red-500');
+            renderProducts(); // Initial load of products
+            updateCartItemCount(); // Update cart count on load
+
+            // Category filter buttons
+            document.querySelectorAll('.category-filter-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    document.querySelectorAll('.category-filter-btn').forEach(btn => {
+                        btn.classList.remove('active', 'bg-blue-500', 'hover:bg-blue-600', 'text-white');
+                        btn.classList.add('bg-gray-300', 'hover:bg-gray-400', 'text-gray-800');
+                    });
+                    event.target.classList.add('active', 'bg-blue-500', 'hover:bg-blue-600', 'text-white');
+                    event.target.classList.remove('bg-gray-300', 'hover:bg-gray-400', 'text-gray-800');
+                    renderProducts(event.target.dataset.category);
+                });
+            });
+
+            // Add to cart from modal button
+            document.getElementById('addToCartModalBtn').addEventListener('click', () => {
+                if (!currentSelectedProduct) return;
+
+                const selectedSizeOption = currentSelectedProduct.options.sizes.find(
+                    s => s.size === document.getElementById('modalProductSize').value
+                ).price;
+
+                const itemToAdd = {
+                    id: currentSelectedProduct.id,
+                    name: currentSelectedProduct.name,
+                    price: selectedSizeOption,
+                    quantity: 1,
+                    image: currentSelectedProduct.images[0],
+                    size: document.getElementById('modalProductSize').value,
+                    category: currentSelectedProduct.category // Include category here
+                };
+
+                // Add frame specific options if applicable
+                if (currentSelectedProduct.category === 'Frame') {
+                    itemToAdd.frameType = document.getElementById('modalFrameType').value;
+                    itemToAdd.frameColor = document.getElementById('modalFrameColor').value;
                 }
-            };
 
-            if (placeOrderBtn) {
-                placeOrderBtn.onclick = handlePlaceOrder;
-                updatePlaceOrderButtonState();
-            }
-        }
+                addToCart(itemToAdd);
+                closeModal('productDetailModal');
+                showNotification('Success!', `${currentSelectedProduct.name} added to cart.`, 'success');
+            });
 
-        /**
-         * Updates the state of the Place Order button based on cart items and file selection.
-         */
-        function updatePlaceOrderButtonState() {
-            const placeOrderBtn = document.getElementById('place-order-btn');
-            if (!placeOrderBtn) return;
-
-            const orderFileUploadInput = document.getElementById('order-file-upload');
-            const isFileSelected = orderFileUploadInput && orderFileUploadInput.files.length > 0;
-            const isCartNotEmpty = cartItems.length > 0;
-
-            if (isFileSelected && isCartNotEmpty) {
-                placeOrderBtn.disabled = false;
-                placeOrderBtn.classList.remove('bg-gray-400', 'text-gray-700', 'cursor-not-allowed');
-                placeOrderBtn.classList.add('bg-green-600', 'text-white', 'hover:bg-green-700');
-            } else {
-                placeOrderBtn.disabled = true;
-                placeOrderBtn.classList.add('bg-gray-400', 'text-gray-700', 'cursor-not-allowed');
-                placeOrderBtn.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
-            }
-        }
-
-        /**
-         * Handles the order placement logic, sending data and file to Google Sheet.
-         */
-        async function handlePlaceOrder() {
-            const googleSheetUrl = 'https://script.google.com/macros/s/AKfycbz0uEVl8syelRvVLq1eDBxQcA9mPxNTAjq5RjRTD7kzVbs2k2cvd2EBTBoDNvXv-I0/exec'; // Your provided URL
-
-            if (cartItems.length === 0) {
-                showOrderMessage('Your cart is empty.', 'bg-red-500');
-                return;
-            }
-
-            const customerName = document.getElementById('customerName').value.trim();
-            const customerPhone = document.getElementById('customerPhone').value.trim();
-            
-            const deliveryOption = document.querySelector('input[name="deliveryOption"]:checked').value;
-            let finalCustomerAddress = ''; // This will be the address used in the 'customerAddress' column in the sheet
-            let finalDeliveryAddress = ''; // This will be the address used in the 'deliveryAddress' column in the sheet
-
-            if (deliveryOption === 'delivery') {
-                finalDeliveryAddress = document.getElementById('deliveryAddress').value.trim();
-                finalCustomerAddress = 'N/A (Delivery Selected)'; // Indicate in sheet that pickup address is not applicable
-            } else { // pickup
-                finalCustomerAddress = shopAddress; // Use the shop address for pickup
-                finalDeliveryAddress = 'N/A (Pickup Selected)'; // Indicate in sheet that delivery address is not applicable
-            }
-
-
-            const uploadedFile = document.getElementById('order-file-upload').files[0];
-
-            // Basic validations
-            if (!customerName || !customerPhone) {
-                showOrderMessage('कृपया अपना नाम और फोन नंबर दर्ज करें।', 'bg-red-500');
-                return;
-            }
-            if (deliveryOption === 'delivery' && !finalDeliveryAddress) {
-                showOrderMessage('कृपया डिलीवरी पता दर्ज करें।', 'bg-red-500');
-                return;
-            }
-            if (!uploadedFile) {
-                showOrderMessage('कृपया अपने ऑर्डर के लिए एक फ़ाइल अपलोड करें।', 'bg-red-500');
-                return;
-            }
-
-            const orderId = `ORDER-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-            const orderDate = new Date().toLocaleString();
-
-            // Extract frameType and frameColor from the first applicable item in the cart
-            let orderFrameType = 'N/A';
-            let orderFrameColor = 'N/A';
-            const firstFrameItem = cartItems.find(item => item.category === 'Frame');
-            if (firstFrameItem) {
-                orderFrameType = firstFrameItem.selectedFrameType || 'N/A';
-                orderFrameColor = firstFrameItem.selectedFrameColor || 'N/A';
-            }
-
-            // Summarize cart items for the sheet
-            let cartSummary = '';
-            if (cartItems.length > 0) {
-                const itemNames = cartItems.map(item => {
-                    let itemDetails = item.name;
-                    if (item.category === 'Frame' && item.selectedFrameType && item.selectedFrameColor) {
-                        itemDetails += ` (${item.selectedFrameType}, ${item.selectedFrameColor})`;
-                    }
-                    return `${itemDetails} (x${item.quantity})`;
+            // Navigation items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', (event) => {
+                    event.preventDefault(); // Prevent default link behavior
+                    const pageId = event.currentTarget.dataset.page;
+                    showPage(pageId);
                 });
-                cartSummary = `${cartItems.length} items: ${itemNames.join(', ')}`;
-            } else {
-                cartSummary = 'No items in cart';
-            }
+            });
 
-
-            const formData = new FormData();
-            formData.append('orderId', orderId);
-            formData.append('orderDate', orderDate);
-            formData.append('customerName', customerName);
-            formData.append('customerPhone', customerPhone);
-            formData.append('customerAddress', finalCustomerAddress); // Use the final calculated pickup address
-            formData.append('deliveryOption', deliveryOption);
-            formData.append('deliveryAddress', finalDeliveryAddress); // Use the final calculated delivery address
-            formData.append('totalAmount', calculateCartTotal());
-            formData.append('cartItems', cartSummary); // Send summarized cart info
-
-            // Append new top-level frame details
-            formData.append('frameType', orderFrameType);
-            formData.append('frameColor', orderFrameColor);
-
-            // Append the actual file to formData
-            if (uploadedFile) {
-                formData.append('uploadedFile', uploadedFile);
-                formData.append('uploadedFileName', uploadedFile.name); // Send filename as a separate field
-            } else {
-                formData.append('uploadedFileName', 'No File');
-            }
-
-
-            try {
-                // Show loading state
-                const placeOrderBtn = document.getElementById('place-order-btn');
-                placeOrderBtn.disabled = true;
-                placeOrderBtn.innerHTML = 'Processing... <span class="loader"></span>';
-                showOrderMessage('ऑर्डर प्रोसेस हो रहा है...', 'bg-blue-500');
-
-                const response = await fetch(googleSheetUrl, {
-                    method: 'POST',
-                    body: formData,
-                    mode: 'no-cors', // Critical for Google Apps Script to avoid CORS issues
-                });
-
-                showOrderMessage('ऑर्डर सफलतापूर्वक दे दिया गया! (Google शीट और ड्राइव देखें)', 'bg-green-500');
-                console.log('ऑर्डर सबमिट किया गया:', {
-                    orderId, orderDate, customerName, customerPhone, finalCustomerAddress,
-                    cartSummary, deliveryOption, finalDeliveryAddress, totalAmount: calculateCartTotal(),
-                    frameType: orderFrameType, frameColor: orderFrameColor,
-                    uploadedFileName: uploadedFile ? uploadedFile.name : 'No File'
-                });
-                clearCart();
-                // Reset form fields and file input
-                document.getElementById('customerName').value = '';
-                document.getElementById('customerPhone').value = '';
-                document.getElementById('customerAddress').value = ''; // Reset, will be set by radio change if pickup is default
+            // Delivery Type change listener
+            document.getElementById('deliveryOption').addEventListener('change', () => {
+                document.getElementById('deliveryAddress').readOnly = false;
                 document.getElementById('deliveryAddress').value = '';
-                document.getElementById('delivery-option').checked = true; // Set delivery as default
-                // Ensure pickup address field is reset correctly after order placement
-                const customerAddressTextareaReset = document.getElementById('customerAddress');
-                const deliveryAddressContainerReset = document.getElementById('delivery-address-container');
+                document.getElementById('deliveryAddress').placeholder = 'Enter your full address';
+            });
+            document.getElementById('pickupOption').addEventListener('change', () => {
+                document.getElementById('deliveryAddress').readOnly = true;
+                document.getElementById('deliveryAddress').value = '123, Main Road, New Delhi, India'; // Shop address
+            });
 
-                if (deliveryOption === 'delivery') { // If last order was delivery, set default back to delivery
-                    customerAddressTextareaReset.value = '';
-                    customerAddressTextareaReset.readOnly = false;
-                    customerAddressTextareaReset.classList.remove('read-only');
-                    deliveryAddressContainerReset.style.display = 'block';
-                } else { // If last order was pickup, ensure it resets to delivery state (empty & editable)
-                    customerAddressTextareaReset.value = '';
-                    customerAddressTextareaReset.readOnly = false;
-                    customerAddressTextareaReset.classList.remove('read-only');
-                    deliveryAddressContainerReset.style.display = 'block';
+            // File Upload listener
+            document.getElementById('fileUpload').addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    const validTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+                    if (!validTypes.includes(file.type)) {
+                        showNotification('Error!', 'Please upload only JPG, PNG, or PDF files.', 'error');
+                        event.target.value = ''; // Clear file input
+                        uploadedFileData = null;
+                        uploadedFileName = '';
+                        uploadedFileType = '';
+                        document.getElementById('fileNameDisplay').textContent = '';
+                        return;
+                    }
+                    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+                        showNotification('Error!', 'File size should not exceed 5MB.', 'error');
+                        event.target.value = ''; // Clear file input
+                        uploadedFileData = null;
+                        uploadedFileName = '';
+                        uploadedFileType = '';
+                        document.getElementById('fileNameDisplay').textContent = '';
+                        return;
+                    }
+
+                    document.getElementById('fileNameDisplay').textContent = `Selected file: ${file.name}`;
+                    uploadedFileName = file.name;
+                    uploadedFileType = file.type;
+
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        // Remove the data:image/png;base64, prefix
+                        uploadedFileData = reader.result.split(',')[1];
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    uploadedFileData = null;
+                    uploadedFileName = '';
+                    uploadedFileType = '';
+                    document.getElementById('fileNameDisplay').textContent = '';
+                }
+            });
+
+            // Place Order button listener
+            document.getElementById('placeOrderBtn').addEventListener('click', async () => {
+                const customerName = document.getElementById('customerName').value;
+                const customerPhone = document.getElementById('customerPhone').value;
+                const deliveryType = document.querySelector('input[name="deliveryType"]:checked').value;
+                const deliveryAddress = document.getElementById('deliveryAddress').value;
+
+                if (!customerName || !customerPhone || !deliveryAddress) {
+                    showNotification('Required Fields!', 'Please fill in all required information.', 'error');
+                    return;
                 }
 
-                document.getElementById('order-file-upload').value = '';
-                document.getElementById('order-file-status').textContent = 'No file selected.';
-                document.getElementById('order-file-status').classList.remove('text-gray-500');
-                document.getElementById('order-file-status').classList.add('text-red-500');
-                updatePlaceOrderButtonState();
+                if (cart.length === 0) {
+                    showNotification('Empty Cart!', 'Please add items to your cart before placing an order.', 'error');
+                    return;
+                }
 
-            } catch (error) {
-                console.error('ऑर्डर सबमिट करने में त्रुटि:', error);
-                showOrderMessage('ऑर्डर सबमिट करने में त्रुटि। कृपया पुनः प्रयास करें।', 'bg-red-500');
-            } finally {
-                // Reset button text and state
-                const placeOrderBtn = document.getElementById('place-order-btn');
-                placeOrderBtn.innerHTML = 'Place Order';
-                updatePlaceOrderButtonState();
-            }
-        }
+                showLoading(true);
 
+                const orderData = {
+                    customerName: customerName,
+                    customerPhone: customerPhone,
+                    deliveryType: deliveryType,
+                    deliveryAddress: deliveryAddress,
+                    cartItems: cart.map(item => ({
+                        id: item.id,
+                        name: item.name,
+                        price: item.price,
+                        quantity: item.quantity,
+                        size: item.size,
+                        category: item.category, // Pass category to Apps Script
+                        frameType: item.frameType,
+                        frameColor: item.frameColor
+                    })),
+                    totalPrice: parseFloat(document.getElementById('cartTotalPrice').textContent.replace('₹', '')),
+                    fileData: uploadedFileData,
+                    fileName: uploadedFileName,
+                    fileType: uploadedFileType
+                };
 
-        // --- Initialization on Window Load ---
-        window.onload = () => {
-            const currentYearSpan = document.getElementById('current-year');
-            if (currentYearSpan) {
-                currentYearSpan.textContent = new Date().getFullYear();
-            }
-            renderCategoryFilters();
-            renderProducts();
-            showPage('home'); // Show home page by default
-            updateCartItemCount();
-            updatePlaceOrderButtonState();
-            
-            // Initial state for address fields on page load
-            // Since delivery is default, customerAddress should be empty and editable, deliveryAddress shown
-            const customerAddressFieldInit = document.getElementById('customerAddress');
-            const deliveryAddressContainerInit = document.getElementById('delivery-address-container');
-            if (customerAddressFieldInit) {
-                customerAddressFieldInit.value = '';
-                customerAddressFieldInit.readOnly = false;
-                customerAddressFieldInit.classList.remove('read-only');
-            }
-            if (deliveryAddressContainerInit) {
-                deliveryAddressContainerInit.style.display = 'block';
-            }
-        };
+                try {
+                    const response = await fetch(WEB_APP_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'text/plain;charset=utf-8', // Important for Apps Script doPost
+                        },
+                        body: JSON.stringify(orderData),
+                    });
+
+                    // Log the raw response object for debugging
+                    console.log('Raw response from Apps Script:', response);
+
+                    // Get the response body as text first, as .json() can fail
+                    const responseText = await response.text();
+                    console.log('Raw response text (from Apps Script):', responseText);
+
+                    showLoading(false); // Hide loading spinner here, regardless of success or failure.
+
+                    // Check if the HTTP response itself was successful (e.g., 200 OK)
+                    if (!response.ok) {
+                        console.error('HTTP Error Response (non-OK status):', responseText);
+                        showNotification('Server Error!', `Order failed with status ${response.status}. Please try again.`, 'error');
+                        return; // Exit if HTTP response was not OK
+                    }
+
+                    let result = null;
+                    try {
+                        result = JSON.parse(responseText); // Attempt to parse JSON
+                    } catch (jsonParseError) {
+                        console.warn('Could not parse JSON response:', jsonParseError);
+                        // If JSON parsing fails, we'll rely on the text-based heuristic below.
+                    }
+
+                    // Prioritize JSON result if available and valid
+                    if (result && result.status === 'SUCCESS') {
+                        showNotification('Order Successful!', result.message, 'success');
+                        // Clear cart and form fields as if successful
+                        cart = [];
+                        saveCart();
+                        renderCart();
+                        updateCartItemCount();
+                        document.getElementById('customerName').value = '';
+                        document.getElementById('customerPhone').value = '';
+                        document.getElementById('deliveryOption').checked = true;
+                        document.getElementById('deliveryAddress').value = '';
+                        document.getElementById('deliveryAddress').readOnly = false;
+                        document.getElementById('fileUpload').value = '';
+                        document.getElementById('fileNameDisplay').textContent = '';
+                        uploadedFileData = null;
+                        uploadedFileName = '';
+                        uploadedFileType = '';
+                    } else if (result && result.status === 'ERROR') {
+                        showNotification('Order Failed!', `An error occurred while placing the order: ${result.message}`, 'error');
+                    } else {
+                        // Fallback heuristic: If JSON parsing failed or status not explicitly found,
+                        // and the text contains 'SUCCESS', assume success.
+                        if (responseText.toUpperCase().includes('SUCCESS')) { // Case-insensitive check
+                            showNotification('Order Successful!', 'Order placed successfully. There was a minor issue with server response format. Please check your order details.', 'success');
+                            // Clear cart and form fields as if successful
+                            cart = [];
+                            saveCart();
+                            renderCart();
+                            updateCartItemCount();
+                            document.getElementById('customerName').value = '';
+                            document.getElementById('customerPhone').value = '';
+                            document.getElementById('deliveryOption').checked = true;
+                            document.getElementById('deliveryAddress').value = '';
+                            document.getElementById('deliveryAddress').readOnly = false;
+                            document.getElementById('fileUpload').value = '';
+                            document.getElementById('fileNameDisplay').textContent = '';
+                            uploadedFileData = null;
+                            uploadedFileName = '';
+                            uploadedFileType = '';
+                        } else {
+                            // If none of the above, then it's genuinely an unknown response error.
+                            showNotification('Response Error!', 'Received an unreadable or unexpected response from the server. Please try again.', 'error');
+                        }
+                    }
+
+                } catch (networkError) {
+                    // This outer catch block catches fundamental network errors (e.g., no internet, CORS issues preventing fetch itself)
+                    showLoading(false); // Ensure loading is hidden on network error
+                    console.error('Network Error during order placement:', networkError);
+                    showNotification('Connection Error!', 'A network error occurred while placing the order. Please try again.', 'error');
+                }
+            });
+
+            // Initial setup for delivery address based on default selected radio
+            document.getElementById('deliveryOption').checked = true;
+            document.getElementById('deliveryAddress').readOnly = false;
+        });
     </script>
 </body>
 </html>
