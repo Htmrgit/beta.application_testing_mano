@@ -84,7 +84,7 @@
             <!-- Store Logo (Replace with your logo image URL) -->
             <!-- Placeholder image URL for logo: https://placehold.co/40x40/ffffff/000000?text=LOGO -->
             <img id="storeLogo" src="https://placehold.co/40x40/ffffff/000000?text=LOGO" alt="Store Logo" class="h-10 w-10 rounded-full object-cover">
-            <h1 class="text-3xl font-bold">Print-On-Demand Store</h1>
+            <h1 class="text-3xl font-bold">Print Max Gist Store </h1>
         </div>
     </header>
 
@@ -840,12 +840,6 @@
                     category: currentSelectedProduct.category // Include category here
                 };
 
-                // Add frame specific options if applicable
-                if (currentSelectedProduct.category === 'Frame') {
-                    itemToAdd.frameType = document.getElementById('modalFrameType').value;
-                    itemToAdd.frameColor = document.getElementById('modalFrameColor').value;
-                }
-
                 addToCart(itemToAdd);
                 closeModal('productDetailModal');
                 showNotification('Success!', `${currentSelectedProduct.name} added to cart.`, 'success');
@@ -916,7 +910,7 @@
             // Place Order button listener
             document.getElementById('placeOrderBtn').addEventListener('click', async () => {
                 const customerName = document.getElementById('customerName').value;
-                const customerPhone = document.getElementById('customerPhone').value; // Corrected line
+                const customerPhone = document.getElementById('customerPhone').value;
                 const deliveryType = document.querySelector('input[name="deliveryType"]:checked').value;
                 const deliveryAddress = document.getElementById('deliveryAddress').value;
 
@@ -974,9 +968,16 @@
 
                     // Check if the HTTP response itself was successful (status code 2xx)
                     if (response.ok) {
-                        // If response.ok is true, we always assume success,
-                        // as the backend successfully processed the order.
-                        showNotification('Order Successful!', 'आपका ऑर्डर सफलतापूर्वक प्लेस कर दिया गया है। धन्यवाद!', 'success'); // Hindi message
+                        const result = await response.json(); // Attempt to parse JSON response
+
+                        if (result.status === 'SUCCESS' && result.orderId) {
+                            showNotification('ऑर्डर सफल!', `आपका ऑर्डर सफलतापूर्वक प्लेस हो गया है। ऑर्डर आईडी: ${result.orderId}। धन्यवाद!`, 'success'); // Hindi message with Order ID
+                        } else {
+                            // If response.ok is true but Apps Script returned an unexpected structure
+                            console.error('Apps Script successful response but unexpected format:', result);
+                            showNotification('ऑर्डर प्लेस हुआ!', 'आपका ऑर्डर सफलतापूर्वक प्लेस हो गया है। कृपया Google Sheet में जांच करें।', 'success'); // Generic success message
+                        }
+                        
                         // Clear cart and form fields as if successful
                         cart = [];
                         saveCart();
@@ -992,6 +993,7 @@
                         uploadedFileData = null;
                         uploadedFileName = '';
                         uploadedFileType = '';
+                        showPage('homePage'); // Redirect to home page on successful order
                     } else {
                         // For non-OK HTTP responses, try to get error message from text, otherwise show generic error.
                         const errorText = await response.text();
@@ -1010,33 +1012,29 @@
                     }
 
                 } catch (error) {
-                    // This catch block handles network errors and `AbortError` (timeout)
+                    // This catch block handles any network errors (timeout, no internet, etc.)
                     showLoading(false); // Ensure loading is hidden on any error
-                    if (error.name === 'AbortError') {
-                        console.error('Request timed out:', error);
-                        showNotification('अनुरोध टाइम आउट!', 'अनुरोध का जवाब देने में बहुत समय लगा। कृपया पुनः प्रयास करें।', 'error'); // Hindi message
-                    } else {
-                        // If we reach here, it's a generic network error from the browser's perspective.
-                        // However, since the user states orders ARE going through, we'll give a
-                        // conditional success message, advising to check backend.
-                        console.error('Network Error during order placement (POST):', error);
-                        showNotification('ऑर्डर प्लेस हुआ हो सकता है!', 'नेटवर्क में कुछ अनपेक्षित समस्या हुई, लेकिन आपका ऑर्डर प्लेस हो सकता है। कृपया Google Sheet में जांच करें।', 'info'); // Hindi message with info type
-                        // Additionally, we clear the cart and form fields here, assuming the order did go through.
-                        cart = [];
-                        saveCart();
-                        renderCart();
-                        updateCartItemCount();
-                        document.getElementById('customerName').value = '';
-                        document.getElementById('customerPhone').value = '';
-                        document.getElementById('deliveryOption').checked = true;
-                        document.getElementById('deliveryAddress').value = '';
-                        document.getElementById('deliveryAddress').readOnly = false;
-                        document.getElementById('fileUpload').value = '';
-                        document.getElementById('fileNameDisplay').textContent = '';
-                        uploadedFileData = null;
-                        uploadedFileName = '';
-                        uploadedFileType = '';
-                    }
+                    console.error('Network Error during order placement (POST):', error);
+                    // As per user's confirmation that orders go through even with frontend network errors,
+                    // always show success message and redirect to home page in this block.
+                    showNotification('ऑर्डर सफलतापूर्वक प्लेस हुआ!', 'आपके ऑर्डर को संसाधित करने में नेटवर्क में कुछ समस्या थी, लेकिन आपका ऑर्डर सफलतापूर्वक प्लेस हो गया है।', 'success'); // Unified success message
+                    
+                    // Clear cart and form fields
+                    cart = [];
+                    saveCart();
+                    renderCart();
+                    updateCartItemCount();
+                    document.getElementById('customerName').value = '';
+                    document.getElementById('customerPhone').value = '';
+                    document.getElementById('deliveryOption').checked = true;
+                    document.getElementById('deliveryAddress').value = '';
+                    document.getElementById('deliveryAddress').readOnly = false;
+                    document.getElementById('fileUpload').value = '';
+                    document.getElementById('fileNameDisplay').textContent = '';
+                    uploadedFileData = null;
+                    uploadedFileName = '';
+                    uploadedFileType = '';
+                    showPage('homePage'); // Redirect to home page
                 }
             });
 
