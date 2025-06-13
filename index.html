@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Print-On-Demand Store</title>
+    <title>Printmax Gift Store</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -84,7 +84,7 @@
             <!-- Store Logo (Replace with your logo image URL) -->
             <!-- Placeholder image URL for logo: https://placehold.co/40x40/ffffff/000000?text=LOGO -->
             <img id="storeLogo" src="https://placehold.co/40x40/ffffff/000000?text=LOGO" alt="Store Logo" class="h-10 w-10 rounded-full object-cover">
-            <h1 class="text-3xl font-bold">Print Max Gist Store </h1>
+            <h1 class="text-3xl font-bold">Printmax Gift store</h1>
         </div>
     </header>
 
@@ -101,7 +101,8 @@
                 <button class="category-filter-btn bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-6 rounded-lg shadow-md transition duration-300 ease-in-out" data-category="Keychain">Keychain</button>
                 <button class="category-filter-btn bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-6 rounded-lg shadow-md transition duration-300 ease-in-out" data-category="Mug">Mug</button>
                 <button class="category-filter-btn bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-6 rounded-lg shadow-md transition duration-300 ease-in-out" data-category="Card">Card</button>
-            </div>
+                <button class="category-filter-btn bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-6 rounded-lg shadow-md transition duration-300 ease-in-out" data-category="Vsiting card">Vsiting card</button>
+		   </div>
 
             <!-- Product Grid -->
             <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-4">
@@ -316,7 +317,7 @@
 
 
         // Set your store logo URL here
-        const STORE_LOGO_URL = 'https://placehold.co/40x40/ffffff/000000?text=LOGO'; // Example: 'https://yourdomain.com/your-logo.png'
+        const STORE_LOGO_URL = 'https://i.ibb.co/W4bHSNpr/Gemini-Generated-Image-mux3dbmux3dbmux3.jpg'; // Example: 'https://yourdomain.com/your-logo.png'
 
         let products = []; // This will now store products fetched from Google Sheet
         let cart = JSON.parse(localStorage.getItem('cart')) || []; // Load cart from localStorage
